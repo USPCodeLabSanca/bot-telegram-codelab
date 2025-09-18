@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 import handlers.fronts
-import handlers.links
+#import handlers.links
 
 # Loading dotenv data
 load_dotenv()
@@ -22,6 +22,6 @@ def start(msg: telebot.types.Message):
 
 handlers.fronts.show_fronts(bot)
 
-handlers.links.show_links(bot)
+#handlers.links.show_links(bot)
 
 bot.infinity_polling()
