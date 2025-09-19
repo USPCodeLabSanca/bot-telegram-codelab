@@ -2,8 +2,8 @@ import telebot
 from dotenv import load_dotenv
 import os
 
-import handlers.fronts
-#import handlers.links
+from handlers import fronts, checkin #,links
+
 
 # Loading dotenv data
 load_dotenv()
@@ -20,7 +20,10 @@ bot = telebot.TeleBot(TOKEN)
 def start(msg: telebot.types.Message):
     bot.send_message(msg.chat.id, "Eu sou o bot do CodeLab")
 
-handlers.fronts.show_fronts(bot)
+#creates the command /fronts
+fronts.show_fronts(bot)
+
+checkin_BOT= checkin.Check_in(bot)
 
 #handlers.links.show_links(bot)
 
