@@ -1,41 +1,43 @@
 import telebot
 from telebot import formatting
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from database import Check_in_db
 
 class Check_in:
     def __init__(self, nossoBot):
-        self.current_checkin= {
-            #Em cada uma dessas listas fica o que o usuário quis adicionar em seu check-in semanal
-            'tarefas':[],
-            'desafios': [],
-            'comentarios': []
-        }
+        self.current_checkin= Check_in_db() #Database
         self.BOT= nossoBot #Telebot com o token
-        self.current_checkin_empty=True #Inicialmente, você não tem nada no seu check-in
 
         #método que contém todos os handlers de comando/ativa as callbacks
         self.main() 
 
+    def get_db(self, user_id):
+        """O método get_db retorna o que foi cadastrado por esse usuário"""
+        return self.current_checkin.extrai_db(user_id)
+
     def preview_checkin(self, msg):
         """O método preview_checkin permite que o usuário veja uma prévia de como está o seu check in antes de enviar o formatado """
 
-        #se não há nada no check-in, não há porque mostrar uma prévia
-        if self.current_checkin_empty:
+        #Pega da database o que já está no check-in do usuário 
+        checkin_atual = self.get_db(msg.from_user.id)
+
+        #se não há nada no checkin_atual, não há porque mostrar uma prévia
+        if not checkin_atual:
             self.BOT.send_message(msg.chat.id,'Não há nada no seu check-in semanal no momento :( ')
             return
 
         else:
             #o preview é uma string simples com as informações que já estão no check-in
             preview= f'Tarefas realizadas:\n'
-            for t in self.current_checkin['tarefas']:
+            for t in checkin_atual['tarefas']:
                 preview+= f'    -{t}\n'
 
             preview+= f'\nDesafios encontrados:\n'
-            for d in self.current_checkin['desafios']:
+            for d in checkin_atual['desafios']:
                 preview+= f'    -{d}\n'
         
             preview+= f'\nComentários adicionais:\n'
-            for c in self.current_checkin['comentarios']:
+            for c in checkin_atual['comentarios']:
                 preview+= f'    -{c}\n'
 
             self.BOT.send_message(msg.chat.id, preview)
@@ -43,8 +45,11 @@ class Check_in:
     def clear_checkin(self, msg):
         """O método clear_checkin remove tudo o que havia sido adicionado antes pelo usuário"""
 
-        #se não há nada no check-in, não há porque limpar a lista
-        if self.current_checkin_empty:
+        #Pega da database o que já está no check-in do usuário 
+        checkin_atual = self.get_db(msg.from_user.id)
+
+        #se não há nada no checkin_atual, não há porque mostrar uma prévia
+        if not checkin_atual:
             self.BOT.send_message(msg.chat.id,'Não há nada no seu check-in semanal no momento :( ')
             return
         
@@ -60,7 +65,11 @@ class Check_in:
     def format_checkin(self, msg):
         """O método format_checkin escreve o check-in formatado com emojis da maneira estabelecida pelo boost"""
 
-        if self.current_checkin_empty:
+        #Pega da database o que já está no check-in do usuário 
+        checkin_atual = self.get_db(msg.from_user.id)
+
+        #se não há nada no checkin_atual, não há porque mostrar uma prévia
+        if not checkin_atual:
             self.BOT.send_message(msg.chat.id,'Não há nada no seu check-in semanal no momento :( ')
             return
         
@@ -68,15 +77,15 @@ class Check_in:
         bullet_char = " • "
         formated= f'{titulo}\n\n'
         formated+= '✅ Progresso dessa semana:\n'
-        for tar in self.current_checkin['tarefas']:
+        for tar in checkin_atual['tarefas']:
             formated+= f'{bullet_char}{tar.capitalize()}\n'
 
         formated+= '\n🚧 Bloqueios / dificuldades:\n'
-        for des in self.current_checkin['desafios']:
+        for des in checkin_atual['desafios']:
             formated+= f'{bullet_char}{des.capitalize()}\n'
 
         formated+= '\n💬 Comentários adicionais (opcional):\n'
-        for com in self.current_checkin['comentarios']:
+        for com in checkin_atual['comentarios']:
             formated+= f'{bullet_char}{com.capitalize()}\n'
 
         self.BOT.send_message(msg.chat.id, formated, parse_mode='HTML')
@@ -104,16 +113,16 @@ class Check_in:
         
         resposta= resposta.capitalize()
         if (categoria=='add_tar'):
-            self.current_checkin['tarefas'].append(resposta)
-            self.BOT.send_message(msg.chat.id, f'✅ Tarefa adicionada: {resposta}\nDeseja adicionar um novo item? /checkin_add')
+            self.current_checkin.add_db(msg.from_user.id, 'tarefas', resposta)
+            self.BOT.send_message(msg.chat.id, f'✅ Tarefa adicionada: <i>{resposta}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         elif (categoria=='add_des'):
-            self.current_checkin['desafios'].append(resposta)
-            self.BOT.send_message(msg.chat.id, f'🚧 Dificuldade adicionada: {resposta}\nDeseja adicionar um novo item? /checkin_add')
+            self.current_checkin.add_db(msg.from_user.id, 'desafios', resposta)
+            self.BOT.send_message(msg.chat.id, f'🚧 Dificuldade adicionada: <i>{resposta}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         elif (categoria=='add_com'):
-            self.current_checkin['comentarios'].append(resposta)
-            self.BOT.send_message(msg.chat.id, f'💬 Comentário adicionado: {resposta}\nDeseja adicionar um novo item? /checkin_add')
+            self.current_checkin.add_db(msg.from_user.id, 'comentarios', resposta)
+            self.BOT.send_message(msg.chat.id, f'💬 Comentário adicionado: <i>{resposta}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         self.current_checkin_empty=False
 
@@ -145,10 +154,7 @@ class Check_in:
                 self.BOT.answer_callback_query(call.id)
                 self.BOT.send_message(call.message.chat.id,'Pronto! Check-in semanal esvaziado!')
 
-                for categoria in self.current_checkin.values():
-                    categoria.clear()
-
-                self.current_checkin_empty=True
+                self.current_checkin.deleta_db(call.from_user.id)
 
             elif call.data == 'clear_nao':
                 self.BOT.answer_callback_query(call.id)
@@ -170,6 +176,7 @@ class Check_in:
 
             self.BOT.send_message(msg.chat.id, redirect, parse_mode='HTML')
 
+        #message handler para cada funcionalidade (add, preview, format, clear) 
         self.BOT.message_handler(commands=['checkin_add'])(self.add_checkin)
         self.BOT.message_handler(commands=['checkin_preview'])(self.preview_checkin)
         self.BOT.message_handler(commands=['checkin_format'])(self.format_checkin)
