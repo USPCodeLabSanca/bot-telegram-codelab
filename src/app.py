@@ -21,7 +21,7 @@ def start(msg: telebot.types.Message):
 #creates the command /fronts
 fronts.show_fronts(bot)
 
-#creates the command /checkin*
+#creates the command /checkin_* 
 checkin_BOT= checkin.Check_in(bot)
 
 #handlers.links.show_links(bot)
