@@ -11,7 +11,7 @@ class Check_in:
         providenciado pelo BotFather
         """
 
-        #Nosso mini banco de dados para guardar o que cada usuário/grupo adicioou ao seu relatório semanal
+        #Nosso mini banco de dados para guardar o que cada usuário/grupo adicionou ao seu relatório semanal
         self.DATABASE= Check_in_db() 
 
         #Telebot com o token
@@ -62,7 +62,7 @@ class Check_in:
         :Parâmetro msg: Mensagem do telegram que pediu o preview"""
 
         #Pega os dados que estão neste relátorio para escrever o preview
-        checkin_atual = self.get_db_a(msg.chat.id)
+        checkin_atual = self.getDB_a(msg.chat.id)
 
         #Se não há nada no checkin_atual, não há porque mostrar uma prévia
         if self.is_db_empty(checkin_atual, msg):
@@ -90,7 +90,7 @@ class Check_in:
         :Parâmetro msg: Mensagem do telegram que pediu para deletar os dados"""
 
         #Pega os dados na database para ver se tem alguma coisa para apagar
-        checkin_atual = self.get_db_a(msg.chat.id)
+        checkin_atual = self.getDB_a(msg.chat.id)
 
         #Se não há nada no checkin_atual, não há nada pra deletar
         if self.is_db_empty(checkin_atual, msg):
@@ -111,7 +111,7 @@ class Check_in:
         :Parâmetro msg: Mensagem do telegram que pediu para deletar os dados"""
 
         #Pega os dados que estão neste relátorio para escrever o relatório
-        checkin_atual = self.get_db_a(msg.chat.id)
+        checkin_atual = self.getDB_a(msg.chat.id)
 
         #Se não há nada no checkin_atual, não há porque formatar
         if self.is_db_empty(checkin_atual, msg):
@@ -253,3 +253,4 @@ class Check_in:
 
         #Limpa o banco de dados de entradas antigas inutilizadas
         self.DATABASE.manutencao_db()
+        

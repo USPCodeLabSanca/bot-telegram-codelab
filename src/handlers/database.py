@@ -1,23 +1,38 @@
 import sqlite3
 from datetime import datetime, timedelta
 import threading
+import logging
 
 class Check_in_db():
     def __init__(self, database_path='users.db'):
-        self.db = database_path
+        """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos de criação de relatórios semanais.
+        
+        :Parametro database_path: string contendo o nome do arquivo em que serão armazenados os processos"""
+
+        # O arquivo onde será salvo os processos
+        self.DB = database_path 
+
+        # Manutenção de thread para segurança
         self.local = threading.local()
 
+        #Cria o logger
+        self.logger = logging.getLogger(__name__)
+        
+        # Cria a tabela de dados caso ela não existir
         self.inicia_db()
 
     def get_conexao(self):
-        if not hasattr(self.local, 'connection'):
-            self.local.connection = sqlite3.connect(self.db)
-        return self.local.connection
+        """O método get_conexao estabelece o contato entre o nosso código e a database
         
+        :Return: A conexão estabelecida"""
 
+        if not hasattr(self.local, 'connection'):
+            self.local.connection = sqlite3.connect(self.DB)
+
+        return self.local.connection
+    
     def inicia_db(self):
-        """O método inicia_db cria a tabela em que os dados que os usuários querem adicionar 
-            ao seu check-in semanal serão inseridos de acordo com o user_id de cada um"""
+        """O método inicia_db cria a tabela em que os dados serão inseridos"""
         
         #Estabelece a conexão e cria o cursor
         conexao = self.get_conexao() 
@@ -45,13 +60,27 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
+            #Loga o evento realizado
+            self.logger.info('Tabela criada com sucesso!')
+
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
-            raise e
+                #Anula a última ação feita pelo código, no caso a criação da tabela
+                conexao.rollback() 
 
-    def add_db(self, userID, chatID, cat, it):
-        """O método add_db adiciona à nossa tabela o que o usuário escreveu"""
+            # Loga o erro ocorrido 
+            self.logger.critical('Erro ao criar a tabela')
+            raise e
+        
+    def add_db(self, userID: int, chatID: int, cat: str, it: str):
+        """O método add_db adiciona à nossa tabela o que o usuário escreveu
+        
+        :Param userID: int que representa o usuário que adicionou o dado
+        :Param chatID: int que representa a conversa que adicionou o dado
+        :Param cat: str que representa qual a categoria que será adicionada (tarefa, desafio ou comentario)
+        :Param it: str que representa o item a ser adicionado (estudei tal coisa, dificuldade com a biblioteca, ...)
+
+        """
 
         try:
             #Estabelece a conexão e cria o cursor
@@ -66,13 +95,27 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
+            #Loga o evento realizado
+            self.logger.info(f'Item "{it}" adicionado na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
-            raise e
+                #Anula a última ação feita pelo código, no caso a adição de um item novo
+                conexao.rollback() 
 
-    def extrai_db_s(self, userID, chatID):
-        """O método extrai_db_s pega os dados que estão na tabela para aquele usuário que requisitou um preview ou um format"""
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+            raise e
+  
+    def extrai_db_s(self, userID: int, chatID: int):
+        #AINDA NÃO ESTÁ EM USO
+        """O método extrai_db_s pega os dados que estão na tabela APENAS para aquele usuário que requisitou um preview ou um format, 
+        ao invés de pegar todos os dados da conversa
+        
+        :Param userID: int que representa o usuário que adicionou o dado
+        :Param chatID: int que representa a conversa que adicionou o dado
+        :Return: dicionário com as informações separadas por categoria | None, caso não houver dados salvos pelo id do usuário
+        """
 
         try:
             #Estabelece a conexão e cria um cursor
@@ -94,7 +137,7 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
-            #Coloca num dicionario, mais acessível
+            #Coloca os dados num dicionario
             a=0
             checkin={'tarefas':[], 
                     'desafios':[],
@@ -105,26 +148,37 @@ class Check_in_db():
                     checkin[categoria].append(item)
                     a=1
 
-            if a==0:
+            # Verifica se há itens para enviar
+            if a==0: 
+                #Loga o evento ocorrido
+                self.logger.info(f'Não há dados salvos pelo usuário "{userID}" na conversa "{chatID}" para enviar')
+
                 return None
             
             else:
+                #Loga o evento ocorrido
+                self.logger.info(f'Enviando os dados salvos pelo usuário "{userID}" na conversa "{chatID}"')
+
                 return checkin
-        
+            
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
+                #Anula a última ação feita pelo código, no caso a busca pelos itens
+                conexao.rollback() 
+
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao procurar os items adiconados pelo usuário "{userID}" na conversa "{chatID}"')
             raise e
-        
-    def extrai_db_a(self, chatID):
-        """O método extrai_db_a pega os dados que estão na tabela para aquele usuário que requisitou um preview ou um format"""
+            
+    def extrai_db_a(self, chatID: int):
+        """O método extrai_db_a pega os dados que estão na tabela para aquela conversa que requisitou um preview ou um format"""
 
         try:
             #Estabelece a conexão e cria um cursor
             conexao = self.get_conexao()
             cursor = conexao.cursor() 
 
-            #Pega na tabela o que foi providenciado pelo usuário
+            #Pega na tabela o que foi providenciado pela conversa
             cursor.execute("""
                         SELECT categoria, item FROM user_checkins
                         WHERE chat_id = ?
@@ -150,19 +204,35 @@ class Check_in_db():
                     checkin[categoria].append(item)
                     a=1
 
-            if a==0:
+            # Verifica se há itens para enviar
+            if a==0: 
+                #Loga o evento ocorrido
+                self.logger.info(f'Não há dados salvos na conversa "{chatID}" para enviar')
+
                 return None
             
             else:
+                #Loga o evento ocorrido
+                self.logger.info(f'Enviando os dados salvos na conversa "{chatID}"')
+
                 return checkin
-        
+            
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
+                #Anula a última ação feita pelo código, no caso a busca pelos itens
+                conexao.rollback() 
+
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao procurar os items adiconados na conversa "{chatID}"')
             raise e
-         
-    def deleta_db_s(self, userID, chatID):
-        """O método deleta_db_s apaga todas as entradas feitas pelo usuário"""
+        
+    def deleta_db_s(self, userID: int, chatID: int):
+        #AINDA NÃO ESTÁ EM USO
+        """O método deleta_db_s apaga todas as entradas feitas APENAS pelo usuário naquela conversa
+        
+        :Param userID: int que representa o usuário que pediu para deletar os dados
+        :Param chatID: int que representa a conversa que pediu para deletar os dados
+        """
 
         try:
             #Estabelece a conexão e cria um cursor
@@ -176,13 +246,22 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
+            #Loga o evento ocorrido
+            self.logger.info(f'Itens do usuário "{userID}" na conversa "{chatID}" deletados da database')
+
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
+                #Anula a última ação feita pelo código, no caso deletar os itens
+                conexao.rollback() 
+
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao deletar os items do usuário {userID} na conversa "{chatID}"')
             raise e
         
-    def deleta_db_a(self,chatID):
-        """O método deleta_db_a apaga todas as entradas feitas pelo usuário"""
+    def deleta_db_a(self, chatID: int):
+        """O método deleta_db_a apaga todas as entradas feitas naquela conversa
+        
+        :Param chatID: int que representa a conversa que pediu para deletar os dados"""
 
         try:
             #Estabelece a conexão e cria um cursor
@@ -196,13 +275,22 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
+            #Loga o evento ocorrido
+            self.logger.info(f'Itens da conversa "{chatID}" deletados da database')
+
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
+                #Anula a última ação feita pelo código, no caso deletar os itens
+                conexao.rollback() 
+
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao deletar os items da conversa "{chatID}"')
             raise e
         
-    def manutencao_db(self, tempo=60):
-        """O método manutenção_db é feito pra apagar dados antigos inutilizados"""
+    def manutencao_db(self, tempo: int = 60):
+        """O método manutenção_db é feito pra apagar dados antigos inutilizados
+        
+        :Param tempo: int que representa o numero de dias de tolerância para guardar os dados inutilizados"""
 
         try:
             #Estabelece a conexão e cria um cursor
@@ -219,7 +307,14 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
+            #Loga o evento ocorrido
+            self.logger.info('Exclusão de dados antigos realizada')
+
         except sqlite3.Error as e:
             if conexao:
-                conexao.rollback()
+                #Anula a última ação feita pelo código, no caso deletar os itens antigos
+                conexao.rollback() 
+
+            # Loga o erro ocorrido 
+            self.logger.warning(f'Erro ao deletar os items antigos"')
             raise e
