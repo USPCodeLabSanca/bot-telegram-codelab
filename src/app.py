@@ -2,7 +2,7 @@ import telebot
 from dotenv import load_dotenv
 import os
 
-from handlers import fronts, checkin #,links
+from handlers import fronts, checkin, setCommands #,links
 
 # Loading dotenv data
 load_dotenv()
@@ -14,6 +14,9 @@ USER = os.getenv("USER")
 # Instanciatin th bot
 bot = telebot.TeleBot(TOKEN)
 
+# Puts the commands in the command menu
+bot.set_my_commands(setCommands.COMANDOS)
+
 @bot.message_handler(commands=['start']) 
 def start(msg: telebot.types.Message):
     bot.send_message(msg.chat.id, "Eu sou o bot do CodeLab")
@@ -24,6 +27,6 @@ fronts.show_fronts(bot)
 #creates the command /checkin_* 
 checkin_BOT= checkin.Check_in(bot)
 
-#handlers.links.show_links(bot)
+#links.show_links(bot)
 
 bot.infinity_polling()

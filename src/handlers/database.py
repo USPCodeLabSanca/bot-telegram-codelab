@@ -5,7 +5,8 @@ import logging
 
 class Check_in_db():
     def __init__(self, database_path='users.db'):
-        """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos de criação de relatórios semanais.
+        """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos 
+        de criação de relatórios semanais. 
         
         :Parametro database_path: string contendo o nome do arquivo em que serão armazenados os processos"""
 
@@ -63,6 +64,10 @@ class Check_in_db():
             #Loga o evento realizado
             self.logger.info('Tabela criada com sucesso!')
 
+            cursor.execute("PRAGMA table_info(user_checkins)")
+            colunas= cursor.fetchall()
+            self.logger.debug(f'As colunas presentes na tabela são {colunas}')
+
         except sqlite3.Error as e:
             if conexao:
                 #Anula a última ação feita pelo código, no caso a criação da tabela
@@ -95,8 +100,14 @@ class Check_in_db():
             #Dá o commit do comando realizado
             conexao.commit()
 
-            #Loga o evento realizado
+            #Loga o evento realizado       
             self.logger.info(f'Item "{it}" adicionado na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+
+            cursor.execute("SELECT MAX(id) FROM user_checkins;")
+            ID= cursor.fetchone()[0]
+            cursor.execute("SELECT * FROM user_checkins WHERE id = ?", (ID,))
+            row= cursor.fetchone()
+            self.logger.debug(f'A mais recente adicionada coluna na tabela foi: {row}')     
 
         except sqlite3.Error as e:
             if conexao:
@@ -104,7 +115,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+            self.logger.error(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
             raise e
   
     def extrai_db_s(self, userID: int, chatID: int):
@@ -158,6 +169,7 @@ class Check_in_db():
             else:
                 #Loga o evento ocorrido
                 self.logger.info(f'Enviando os dados salvos pelo usuário "{userID}" na conversa "{chatID}"')
+                self.logger.debug(f'Para o usuário {userID} na conversa {chatID}:\nAs tarefas presentes eram {checkin["tarefas"]}\nOs desafios presentes eram {checkin["desafios"]}\nOs comentarios presentes eram {checkin["comentarios"]}')
 
                 return checkin
             
@@ -167,7 +179,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao procurar os items adiconados pelo usuário "{userID}" na conversa "{chatID}"')
+            self.logger.error(f'Erro ao procurar os items adiconados pelo usuário "{userID}" na conversa "{chatID}"')
             raise e
             
     def extrai_db_a(self, chatID: int):
@@ -214,6 +226,7 @@ class Check_in_db():
             else:
                 #Loga o evento ocorrido
                 self.logger.info(f'Enviando os dados salvos na conversa "{chatID}"')
+                self.logger.debug(f'Para a conversa {chatID}:\nAs tarefas presentes eram {checkin["tarefas"]}\nOs desafios presentes eram {checkin["desafios"]}\nOs comentarios presentes eram {checkin["comentarios"]}')
 
                 return checkin
             
@@ -223,7 +236,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao procurar os items adiconados na conversa "{chatID}"')
+            self.logger.error(f'Erro ao procurar os items adiconados na conversa "{chatID}"')
             raise e
         
     def deleta_db_s(self, userID: int, chatID: int):
@@ -255,7 +268,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao deletar os items do usuário {userID} na conversa "{chatID}"')
+            self.logger.error(f'Erro ao deletar os items do usuário {userID} na conversa "{chatID}"')
             raise e
         
     def deleta_db_a(self, chatID: int):
@@ -284,7 +297,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao deletar os items da conversa "{chatID}"')
+            self.logger.error(f'Erro ao deletar os items da conversa "{chatID}"')
             raise e
         
     def manutencao_db(self, tempo: int = 60):
@@ -316,5 +329,35 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.warning(f'Erro ao deletar os items antigos"')
+            self.logger.error(f'Erro ao deletar os items antigos"')
             raise e
+        
+
+#DEBUG PLACE
+if __name__== '__main__':
+    testingDB= Check_in_db('test.db')
+
+    logger= logging.basicConfig(
+        format= "%(asctime)s [%(levelname)s] line:%(lineno)d - %(message)s",
+        level= logging.DEBUG,
+        filename='test.log' 
+    )
+
+    testingDB.add_db(11, 12, 'tarefas', 'Fiz tal coisa')
+    testingDB.add_db(11, 12, 'tarefas', 'Fiz outra coisa')
+
+
+    testingDB.add_db(11, 13, 'desafios', 'Tal biblioteca')
+    testingDB.add_db(11, 13, 'desafios', 'Tal função')
+    testingDB.add_db(11, 13, 'comentarios', 'Fiz mais uma coisa')
+
+    a= testingDB.extrai_db_a(12)
+    b= testingDB.extrai_db_a(13)
+    c= testingDB.extrai_db_a(14)
+
+
+    testingDB.deleta_db_a(12)
+    testingDB.deleta_db_a(13)
+
+    a= testingDB.extrai_db_a(12)
+    b= testingDB.extrai_db_a(13)

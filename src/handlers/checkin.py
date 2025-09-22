@@ -102,7 +102,12 @@ class Check_in:
         inline_keyboard_clear= InlineKeyboardMarkup(row_width=2)
         inline_keyboard_clear.add(btn1_clear, btn2_clear)
 
-        warning= '<b>WARNING:</b> Tem certeza que você deseja apagar o seu check-in atual?\n<b>Essa ação não pode ser desfeita!</b>'
+        if msg.chat.type== 'private':
+            warning= '<b>WARNING:</b> Tem certeza que você deseja apagar o seu check-in atual?\n<b>Essa ação não pode ser desfeita!</b>'
+
+        else:
+            warning= '<b>WARNING:</b> Tem certeza que você deseja apagar o check-in atual de <u>todo</u> o grupo? <b>Essa ação não pode ser desfeita!</b>'
+
         self.BOT.send_message(msg.chat.id, warning, reply_markup= inline_keyboard_clear, parse_mode='HTML')
 
     def format_checkin(self, msg: Message):
@@ -195,6 +200,29 @@ class Check_in:
                 self.BOT.answer_callback_query(call.id)
                 self.BOT.send_message(call.message.chat.id,'Erro ao processar o comando /checkin_clear')
 
+    def msg_handlers(self):
+        """O método msg_handlers aciona os message handlers para os métodos acima. Também cria o seu próprio 
+        message handler que contém o menu de quais comandos estão disponíveis no momento para auxiliar na 
+        criação do relatório."""
+
+        @self.BOT.message_handler(commands=['checkin']) 
+        def checkin(msg: telebot.types.Message):
+
+            #redirect é a string com o menu de opções de check-in
+            redirect= f'<b>O que você deseja realizar?</b>\n\n'
+            redirect+=f'➕ Adicionar um novo item ao meu check-in:\n/checkin_add\n\n'
+            redirect+=f'🔎 Ver uma prévia simples do que já está no seu check-in:\n/checkin_preview\n\n'
+            redirect+=f'✨ Formatar o check-in atual:\n/checkin_format\n\n'
+            redirect+=f'🚮 Deletar o check-in atual:\n/checkin_clear\n\n'
+
+            self.BOT.send_message(msg.chat.id, redirect, parse_mode='HTML')
+
+        #Cria um message handler para cada funcionalidade (add, preview, format, clear) 
+        self.BOT.message_handler(commands=['checkin_add'])(self.add_checkin)
+        self.BOT.message_handler(commands=['checkin_preview'])(self.preview_checkin)
+        self.BOT.message_handler(commands=['checkin_format'])(self.format_checkin)
+        self.BOT.message_handler(commands=['checkin_clear'])(self.clear_checkin)
+
 
     def le_Resposta(self, msg:Message, categoria: str):
         """O método le_resposta é auxiliar do add_checkin, ele envia para a database o que o usuário quer adicionar ao seu check-in
@@ -226,27 +254,10 @@ class Check_in:
 
 
     def main(self):
-        """O método main é o que aciona os message handlers para os métodos acima e as callbacks. 
-        Também mostra um menu de opções para o usuário de quais comandos estão disponíveis no momento
-        para auxiliar na criação do relatório."""
+        """O método main é o que aciona os dois métodos que contém os message handlers e as callbacks"""
 
-        @self.BOT.message_handler(commands=['checkin']) 
-        def checkin(msg: telebot.types.Message):
-
-            #redirect é a string com o menu de opções de check-in
-            redirect= f'<b>O que você deseja realizar?</b>\n\n'
-            redirect+=f'➕ Adicionar um novo item ao meu check-in:\n/checkin_add\n\n'
-            redirect+=f'🔎 Ver uma prévia simples do que já está no seu check-in:\n/checkin_preview\n\n'
-            redirect+=f'✨ Formatar o check-in atual:\n/checkin_format\n\n'
-            redirect+=f'🚮 Deletar o check-in atual:\n/checkin_clear\n\n'
-
-            self.BOT.send_message(msg.chat.id, redirect, parse_mode='HTML')
-
-        #Cria um message handler para cada funcionalidade (add, preview, format, clear) 
-        self.BOT.message_handler(commands=['checkin_add'])(self.add_checkin)
-        self.BOT.message_handler(commands=['checkin_preview'])(self.preview_checkin)
-        self.BOT.message_handler(commands=['checkin_format'])(self.format_checkin)
-        self.BOT.message_handler(commands=['checkin_clear'])(self.clear_checkin)
+        #Aciona os message handlers
+        self.msg_handlers()
 
         #Aciona as callbacks
         self.callbacks()
@@ -254,3 +265,5 @@ class Check_in:
         #Limpa o banco de dados de entradas antigas inutilizadas
         self.DATABASE.manutencao_db()
         
+
+
