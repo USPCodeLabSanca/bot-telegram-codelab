@@ -1,6 +1,6 @@
 import telebot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReactionTypeEmoji, Message, CallbackQuery
-from database import Check_in_db
+from handlers.dados_checkin import Check_in_db
 
 class Check_in:
     def __init__(self, nossoBot:telebot.TeleBot):
@@ -142,9 +142,10 @@ class Check_in:
 
         #Vamos também reagir à mensagem de formatação com um emoji da lista abaixo
         from random import randint
+        from time import sleep
         emojis=['😍', '🔥', '❤', '😁', '💯', '🦄', '🎉', '🤩', '👍']
         emoji_para_reagir = emojis[randint(0,8)]
-
+        sleep(0.5)
         self.BOT.set_message_reaction(envio.chat.id, envio.id, [ReactionTypeEmoji(emoji_para_reagir)])
 
     def add_checkin(self, msg: Message):
