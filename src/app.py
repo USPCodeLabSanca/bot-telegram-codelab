@@ -2,7 +2,7 @@ import telebot
 from dotenv import load_dotenv
 import os
 
-from handlers import fronts, checkin, setCommands #,links
+from handlers import fronts, checkin, setCommands, codelab #,links
 
 # Loading dotenv data
 load_dotenv()
@@ -23,6 +23,9 @@ def start(msg: telebot.types.Message):
 
 #creates the command /fronts
 fronts.show_fronts(bot)
+
+#creates the command /codelab
+codelab.say_codelab(bot)
 
 #creates the command /checkin_* 
 checkin_BOT= checkin.Check_in(bot)
