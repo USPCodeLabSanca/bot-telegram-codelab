@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 import random
 
-# Lista
+# Lista de nomes CORRETÍSSIMOS do grupo Codelab
 INNER_NAME_LIST = [
     'Codelab',
     'COdElAb',
@@ -27,4 +27,4 @@ def say_codelab(bot):
     @bot.message_handler(commands=['codelab'])
     def codelab(msg: telebot.types.Message):
         randomName = random.choice(INNER_NAME_LIST)
-        bot.send_message(msg.chat.id, f'Este é o bot do {randomName}')
+        bot.send_message(msg.chat.id, f'Meu grupo chama {randomName}!')
