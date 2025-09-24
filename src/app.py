@@ -2,7 +2,7 @@ import telebot
 from dotenv import load_dotenv
 import os
 
-from handlers import fronts, checkin, setCommands #,links
+from handlers import links, fronts, checkin, setCommands
 
 # Loading dotenv data
 load_dotenv()
@@ -27,6 +27,7 @@ fronts.show_fronts(bot)
 #creates the command /checkin_* 
 checkin_BOT= checkin.Check_in(bot)
 
-#links.show_links(bot)
+#creates the command /links
+links.show_links(bot)
 
 bot.infinity_polling()
