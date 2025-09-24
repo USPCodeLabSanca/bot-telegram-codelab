@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 from handlers import fronts, checkin, setCommands, codelab #,links
-
+from handlers.codelab import CodelabHandler
 # Carregando as chaves no .env
 load_dotenv()
 
@@ -11,22 +11,40 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 
-# Instanciando o bot
-bot = telebot.TeleBot(TOKEN)
 
-# Instanciando o menu de comandos
-bot.set_my_commands(setCommands.COMANDOS)
+# Lista de nomes CORRETÍSSIMOS do grupo Codelab
+CODELAB_NAME_LIST = [
+    'Codelab',
+    'COdElAb',
+    'COODELABES',
+    'codecode',
+    'Codaleb',
+    'Codslabs',
+    'CodeLabs',
+    'CodLabs',
+    'CodeLabe',
+    'Code.lab',
+    'Code\n\nlabe!',
+    'Cadelob',
+    '0x 43 6F 64 65 6C 61 62',
+    '01100011 01101111 01100100 01100101 01101100 01100001 01100010',
+    'G4n3sh?!?!?!?',
+]
 
-# Teste temporátrio??
-@bot.message_handler(commands=['start']) 
-def start(msg: telebot.types.Message):
-    bot.send_message(msg.chat.id, "Eu sou o bot do CodeLab")
+# Função compositora para associar o bot aos handlers desenvolvidos
+# Criando esses handlers por injeção de dependências
+def create_bot(TOKEN):
+    #instanciando o bot
+    bot = telebot.TeleBot(TOKEN)
 
-# Instanciando os comandos em /handler
-fronts.show_fronts(bot)
-codelab.say_codelab(bot)
-checkin_BOT= checkin.Check_in(bot)
-#links.show_links(bot)
+    # Injetando as dependências nas features
+    codelab = CodelabHandler(bot, CODELAB_NAME_LIST)
 
-# Rodando o bot
-bot.infinity_polling()
+    # Composição das featrues no bot
+    bot.register_message_handler(codelab, commands=['codelab'])
+
+    return bot
+
+if __name__ == "__main__":
+    bot = create_bot(TOKEN)
+    bot.infinity_polling()

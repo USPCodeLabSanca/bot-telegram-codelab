@@ -1,30 +1,20 @@
 import telebot
-from telebot import types
 import random
 
-# Lista de nomes CORRETÍSSIMOS do grupo Codelab
-INNER_NAME_LIST = [
-    'Codelab',
-    'COdElAb',
-    'COODELABES',
-    'codecode',
-    'Codaleb',
-    'Codslabs',
-    'CodeLabs',
-    'CodLabs',
-    'CodeLabe',
-    'Code.lab',
-    'Code\n\nlabe!',
-    'Cadelob',
-    '0x 43 6F 64 65 6C 61 62',
-    '01100011 01101111 01100100 01100101 01101100 01100001 01100010',
-    'G4n3sh?!?!?!?',
-]
+# Handler para o comando /
+class CodelabHandler():
+    def __init__(self, bot, codelab_name_list):
+        self._bot = bot
+        self._name_list = codelab_name_list
 
-def say_codelab(bot):
+    # Escolhe aleatóriamente um nome errado do grupo para enviar na resposta
+    def __call__(self, message):
+        if not self._name_list:
+            msg = "O meu grupo se chama Codelab!"
+        else:
+            name = random.choice(self._name_list)
+            msg = "O meu grupo se chama " + name + "!"
 
-    # Retorna um nome aleatório do codelab como resposta
-    @bot.message_handler(commands=['codelab'])
-    def codelab(msg: telebot.types.Message):
-        randomName = random.choice(INNER_NAME_LIST)
-        bot.send_message(msg.chat.id, f'Meu grupo chama {randomName}!')
+        # Chamando a injeção do método de envio da mensagem
+        self._bot.send_message(message.chat.id, msg)
+
