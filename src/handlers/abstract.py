@@ -13,9 +13,6 @@ class msg_handler(ABC):
     def __call__(self, msg:Message):
         pass
 
-    @abstractmethod
-    def callbacks(self):
-        pass
 
 
 
