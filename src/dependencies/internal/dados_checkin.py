@@ -4,7 +4,7 @@ import threading
 import logging
 
 class Check_in_db():
-    def __init__(self, database_path='src/dependencies/internal/users_checkin.db'):
+    def __init__(self, database_path='dependencies/internal/users_checkin.db'):
         """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos 
         de criação de relatórios semanais. 
         

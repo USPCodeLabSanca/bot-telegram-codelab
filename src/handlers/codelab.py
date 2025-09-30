@@ -1,20 +1,23 @@
 import telebot
 import random
+from telebot.types import Message
 
-# Handler para o comando /
-class CodelabHandler():
+from handlers.abstract import msg_handler
+
+# Handler para o comando /codelab
+class CodelabHandler(msg_handler):
     def __init__(self, bot, codelab_name_list):
-        self._bot = bot
-        self._name_list = codelab_name_list
+        super().__init__(bot, name_list=codelab_name_list)
+
 
     # Escolhe aleatóriamente um nome errado do grupo para enviar na resposta
-    def __call__(self, message):
-        if not self._name_list:
-            msg = "O meu grupo se chama Codelab!"
+    def __call__(self, msg: Message):
+        if not self.name_list:
+            answer = "O meu grupo se chama Codelab!"
         else:
-            name = random.choice(self._name_list)
-            msg = "O meu grupo se chama " + name + "!"
+            name = random.choice(self.name_list)
+            answer = "O meu grupo se chama " + name + "!"
 
         # Chamando a injeção do método de envio da mensagem
-        self._bot.send_message(message.chat.id, msg)
+        self.BOT.send_message(msg.chat.id, answer)
 
