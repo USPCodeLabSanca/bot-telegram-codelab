@@ -4,7 +4,7 @@ import threading
 import logging
 
 class Check_in_db():
-    def __init__(self, database_path='users.db'):
+    def __init__(self, database_path='src/dependencies/internal/users_checkin.db'):
         """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos 
         de criação de relatórios semanais. 
         
@@ -118,71 +118,7 @@ class Check_in_db():
             self.logger.error(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
             raise e
   
-    def extrai_db_s(self, userID: int, chatID: int):
-        #AINDA NÃO ESTÁ EM USO
-        """O método extrai_db_s pega os dados que estão na tabela APENAS para aquele usuário que requisitou um preview ou um format, 
-        ao invés de pegar todos os dados da conversa
-        
-        :Param userID: int que representa o usuário que adicionou o dado
-        :Param chatID: int que representa a conversa que adicionou o dado
-        :Return: dicionário com as informações separadas por categoria | None, caso não houver dados salvos pelo id do usuário
-        """
-
-        try:
-            #Estabelece a conexão e cria um cursor
-            conexao = self.get_conexao()
-            cursor = conexao.cursor() 
-
-            #Pega na tabela o que foi providenciado pelo usuário
-            cursor.execute("""
-                        SELECT categoria, item FROM user_checkins
-                        WHERE user_id = ? AND chat_id = ?
-                        ORDER BY data""", (userID, chatID,))
-            
-            #Guarda as extrações da tabela
-            colunas = cursor.fetchall()
-
-            #Atualiza a data de última modificação
-            cursor.execute("""UPDATE user_checkins SET data_mod = datetime('now') WHERE user_id = ? AND chat_id = ?""", (userID, chatID,))
-
-            #Dá o commit do comando realizado
-            conexao.commit()
-
-            #Coloca os dados num dicionario
-            a=0
-            checkin={'tarefas':[], 
-                    'desafios':[],
-                    'comentarios':[]}
-            
-            for categoria, item in colunas:
-                if categoria in checkin.keys():
-                    checkin[categoria].append(item)
-                    a=1
-
-            # Verifica se há itens para enviar
-            if a==0: 
-                #Loga o evento ocorrido
-                self.logger.info(f'Não há dados salvos pelo usuário "{userID}" na conversa "{chatID}" para enviar')
-
-                return None
-            
-            else:
-                #Loga o evento ocorrido
-                self.logger.info(f'Enviando os dados salvos pelo usuário "{userID}" na conversa "{chatID}"')
-                self.logger.debug(f'Para o usuário {userID} na conversa {chatID}:\nAs tarefas presentes eram {checkin["tarefas"]}\nOs desafios presentes eram {checkin["desafios"]}\nOs comentarios presentes eram {checkin["comentarios"]}')
-
-                return checkin
-            
-        except sqlite3.Error as e:
-            if conexao:
-                #Anula a última ação feita pelo código, no caso a busca pelos itens
-                conexao.rollback() 
-
-            # Loga o erro ocorrido 
-            self.logger.error(f'Erro ao procurar os items adiconados pelo usuário "{userID}" na conversa "{chatID}"')
-            raise e
-            
-    def extrai_db_a(self, chatID: int):
+    def extrai_db(self, chatID: int):
         """O método extrai_db_a pega os dados que estão na tabela para aquela conversa que requisitou um preview ou um format"""
 
         try:
@@ -239,39 +175,7 @@ class Check_in_db():
             self.logger.error(f'Erro ao procurar os items adiconados na conversa "{chatID}"')
             raise e
         
-    def deleta_db_s(self, userID: int, chatID: int):
-        #AINDA NÃO ESTÁ EM USO
-        """O método deleta_db_s apaga todas as entradas feitas APENAS pelo usuário naquela conversa
-        
-        :Param userID: int que representa o usuário que pediu para deletar os dados
-        :Param chatID: int que representa a conversa que pediu para deletar os dados
-        """
-
-        try:
-            #Estabelece a conexão e cria um cursor
-            conexao = self.get_conexao()
-            cursor = conexao.cursor() 
-
-            #Deleta todos os items ligados a um usuário da tabela
-            cursor.execute("""DELETE FROM user_checkins
-                        WHERE user_id = ? AND chat_id = ?""", (userID, chatID,))
-            
-            #Dá o commit do comando realizado
-            conexao.commit()
-
-            #Loga o evento ocorrido
-            self.logger.info(f'Itens do usuário "{userID}" na conversa "{chatID}" deletados da database')
-
-        except sqlite3.Error as e:
-            if conexao:
-                #Anula a última ação feita pelo código, no caso deletar os itens
-                conexao.rollback() 
-
-            # Loga o erro ocorrido 
-            self.logger.error(f'Erro ao deletar os items do usuário {userID} na conversa "{chatID}"')
-            raise e
-        
-    def deleta_db_a(self, chatID: int):
+    def deleta_db(self, chatID: int):
         """O método deleta_db_a apaga todas as entradas feitas naquela conversa
         
         :Param chatID: int que representa a conversa que pediu para deletar os dados"""
@@ -351,13 +255,13 @@ if __name__== '__main__':
     testingDB.add_db(11, 13, 'desafios', 'Tal função')
     testingDB.add_db(11, 13, 'comentarios', 'Fiz mais uma coisa')
 
-    a= testingDB.extrai_db_a(12)
-    b= testingDB.extrai_db_a(13)
-    c= testingDB.extrai_db_a(14)
+    a= testingDB.extrai_db(12)
+    b= testingDB.extrai_db(13)
+    c= testingDB.extrai_db(14)
 
 
-    testingDB.deleta_db_a(12)
-    testingDB.deleta_db_a(13)
+    testingDB.deleta_db(12)
+    testingDB.deleta_db(13)
 
-    a= testingDB.extrai_db_a(12)
-    b= testingDB.extrai_db_a(13)
+    a= testingDB.extrai_db(12)
+    b= testingDB.extrai_db(13)
