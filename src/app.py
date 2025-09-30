@@ -12,28 +12,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 
-
-# Lista de nomes CORRETÍSSIMOS do grupo Codelab
-CODELAB_NAME_LIST = [
-    'Codelab',
-    'COdElAb',
-    'C0DL4B',
-    'COODELABES',
-    'codecode',
-    'Codaleb',
-    'Codslabs',
-    'CodeLabs',
-    'CodLabs',
-    'CodLab',
-    'CodeLabe',
-    'Code.lab',
-    'Code\n\nlabe!',
-    'Cadelob',
-    '0x 43 6F 64 65 6C 61 62',
-    '01100011 01101111 01100100 01100101 01101100 01100001 01100010',
-    'G4n3sh?!?!?!?',
-    'Code Laces'
-]
+CODELAB_NAME_JSON = "dependencies/internal/name_list.json"
 
 # Função compositora para associar o bot aos handlers desenvolvidos
 # Criando esses handlers por injeção de dependências
@@ -45,7 +24,7 @@ def create_bot(TOKEN):
     checkin_DB = dados_checkin.Check_in_db()
 
     # Injetando as dependências nas features
-    codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
+    codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_JSON)
 
     checkin_main = checkin.checkin(bot, DATABASE=checkin_DB)
     checkin_add = checkin.add_checkin(bot, DATABASE=checkin_DB)
