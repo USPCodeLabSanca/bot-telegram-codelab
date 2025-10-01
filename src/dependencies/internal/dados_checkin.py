@@ -1,36 +1,11 @@
 import sqlite3
 from datetime import datetime, timedelta
-import threading
 import logging
+from dependencies.internal.abstract_db import internal_database
 
-class Check_in_db():
-    def __init__(self, database_path='dependencies/internal/users_checkin.db'):
-        """A classe Check_in_db é utilizada para armazenar os dados coletados pelos processos 
-        de criação de relatórios semanais. 
-        
-        :Parametro database_path: string contendo o nome do arquivo em que serão armazenados os processos"""
-
-        # O arquivo onde será salvo os processos
-        self.DB = database_path 
-
-        # Manutenção de thread para segurança
-        self.local = threading.local()
-
-        #Cria o logger
-        self.logger = logging.getLogger(__name__)
-        
-        # Cria a tabela de dados caso ela não existir
-        self.inicia_db()
-
-    def get_conexao(self):
-        """O método get_conexao estabelece o contato entre o nosso código e a database
-        
-        :Return: A conexão estabelecida"""
-
-        if not hasattr(self.local, 'connection'):
-            self.local.connection = sqlite3.connect(self.DB)
-
-        return self.local.connection
+class Check_in_db(internal_database):
+    def __init__(self, database_path):
+        super().__init__(database_path)
     
     def inicia_db(self):
         """O método inicia_db cria a tabela em que os dados serão inseridos"""
@@ -43,7 +18,6 @@ class Check_in_db():
             #Cria a nossa tabela de check-ins
             cursor.execute("""CREATE TABLE IF NOT EXISTS user_checkins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
             chat_id INTEGER NOT NULL,
             categoria TEXT NOT NULL,
             item TEXT NOT NULL,
@@ -51,10 +25,7 @@ class Check_in_db():
             data_mod TEXT NOT NULL DEFAULT (datetime('now'))
             ) """)
 
-            #Cria dois indexes para buscas mais rápidas pelo id
-            cursor.execute("""CREATE INDEX IF NOT EXISTS idx_userid_chatid 
-                        ON user_checkins(user_id, chat_id)""")
-            
+            #Cria index para buscas mais rápidas pelo id            
             cursor.execute("""CREATE INDEX IF NOT EXISTS idx_chatid 
                         ON user_checkins(chat_id)""")
 
@@ -77,10 +48,10 @@ class Check_in_db():
             self.logger.critical('Erro ao criar a tabela')
             raise e
         
-    def add_db(self, userID: int, chatID: int, cat: str, it: str):
+    def add_db(self, chatID: int, cat: str, it: str):
+
         """O método add_db adiciona à nossa tabela o que o usuário escreveu
-        
-        :Param userID: int que representa o usuário que adicionou o dado
+
         :Param chatID: int que representa a conversa que adicionou o dado
         :Param cat: str que representa qual a categoria que será adicionada (tarefa, desafio ou comentario)
         :Param it: str que representa o item a ser adicionado (estudei tal coisa, dificuldade com a biblioteca, ...)
@@ -94,14 +65,14 @@ class Check_in_db():
 
             #Inserindo na tabela
             cursor.execute("""
-                            INSERT INTO user_checkins (user_id, chat_id, categoria, item)
-                            VALUES (?, ?, ?, ?)""", (userID, chatID, cat, it,))
+                            INSERT INTO user_checkins (chat_id, categoria, item)
+                            VALUES (?, ?, ?)""", (chatID, cat, it,))
 
             #Dá o commit do comando realizado
             conexao.commit()
 
             #Loga o evento realizado       
-            self.logger.info(f'Item "{it}" adicionado na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+            self.logger.info(f'Item "{it}" adicionado na categoria "{cat}" na conversa "{chatID}"')
 
             cursor.execute("SELECT MAX(id) FROM user_checkins;")
             ID= cursor.fetchone()[0]
@@ -115,7 +86,7 @@ class Check_in_db():
                 conexao.rollback() 
 
             # Loga o erro ocorrido 
-            self.logger.error(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário "{userID}" na conversa "{chatID}"')
+            self.logger.error(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário na conversa "{chatID}"')
             raise e
   
     def extrai_db(self, chatID: int):
@@ -143,9 +114,9 @@ class Check_in_db():
 
             #Coloca num dicionario, mais acessível
             a=0
-            checkin={'tarefas':[], 
-                    'desafios':[],
-                    'comentarios':[]}
+            checkin={'tasks':[], 
+                    'challenges':[],
+                    'comments':[]}
             
             for categoria, item in colunas:
                 if categoria in checkin.keys():
@@ -162,7 +133,7 @@ class Check_in_db():
             else:
                 #Loga o evento ocorrido
                 self.logger.info(f'Enviando os dados salvos na conversa "{chatID}"')
-                self.logger.debug(f'Para a conversa {chatID}:\nAs tarefas presentes eram {checkin["tarefas"]}\nOs desafios presentes eram {checkin["desafios"]}\nOs comentarios presentes eram {checkin["comentarios"]}')
+                self.logger.debug(f'Para a conversa {chatID}:\nAs tarefas presentes eram {checkin["tasks"]}\nOs desafios presentes eram {checkin["challenges"]}\nOs comentarios presentes eram {checkin["comments"]}')
 
                 return checkin
             
@@ -239,7 +210,7 @@ class Check_in_db():
 
 #DEBUG PLACE
 if __name__== '__main__':
-    testingDB= Check_in_db('test.db')
+    testingDB= Check_in_db(database_path='src/dependencies/internal/test.db')
 
     logger= logging.basicConfig(
         format= "%(asctime)s [%(levelname)s] line:%(lineno)d - %(message)s",
@@ -247,13 +218,13 @@ if __name__== '__main__':
         filename='test.log' 
     )
 
-    testingDB.add_db(11, 12, 'tarefas', 'Fiz tal coisa')
-    testingDB.add_db(11, 12, 'tarefas', 'Fiz outra coisa')
+    testingDB.add_db(12, 'tasks', 'Fiz tal coisa')
+    testingDB.add_db(12, 'tasks', 'Fiz outra coisa')
 
 
-    testingDB.add_db(11, 13, 'desafios', 'Tal biblioteca')
-    testingDB.add_db(11, 13, 'desafios', 'Tal função')
-    testingDB.add_db(11, 13, 'comentarios', 'Fiz mais uma coisa')
+    testingDB.add_db(13, 'challenges', 'Tal biblioteca')
+    testingDB.add_db(13, 'challenges', 'Tal função')
+    testingDB.add_db(13, 'comments', 'Fiz mais uma coisa')
 
     a= testingDB.extrai_db(12)
     b= testingDB.extrai_db(13)

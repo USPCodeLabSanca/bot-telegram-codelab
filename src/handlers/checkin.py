@@ -2,9 +2,10 @@ from telebot import TeleBot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReactionTypeEmoji, Message, CallbackQuery
 
 from handlers.abstract import msg_handler
+from dependencies.internal.abstract_db import internal_database
        
 class handler_DB():
-    def __init__(self, bot:TeleBot, DB):
+    def __init__(self, bot:TeleBot, DB:internal_database):
         """A classe handler_DB foi feita para auxiliar as ações comumente realizadas pelos comandos checkin
         
         :Param bot: o nosso Telebot com o token de utilização
@@ -89,15 +90,15 @@ class add_checkin(msg_handler):
         
         answer= answer.capitalize()
         if (categoria=='add_tar'):
-            self.DATABASE.add_db(msg.from_user.id, msg.chat.id, 'tarefas', answer)
+            self.DATABASE.add_db(msg.chat.id, 'tasks', answer)
             self.BOT.send_message(msg.chat.id, f'✅ Tarefa adicionada: <i>{answer}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         elif (categoria=='add_des'):
-            self.DATABASE.add_db(msg.from_user.id, msg.chat.id, 'desafios', answer)
+            self.DATABASE.add_db(msg.chat.id, 'challenges', answer)
             self.BOT.send_message(msg.chat.id, f'🚧 Dificuldade adicionada: <i>{answer}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         elif (categoria=='add_com'):
-            self.DATABASE.add_db(msg.from_user.id, msg.chat.id, 'comentarios', answer)
+            self.DATABASE.add_db(msg.chat.id, 'comments', answer)
             self.BOT.send_message(msg.chat.id, f'💬 Comentário adicionado: <i>{answer}</i>\nDeseja adicionar um novo item? /checkin_add', parse_mode='HTML')
 
         else:
@@ -109,22 +110,21 @@ class preview_checkin(msg_handler):
         self.db_handler= handler_DB(nossoBOT, self.DATABASE)
 
     def __call__(self, msg: Message):
+        current_checkin=self.db_handler.getDB(msg.chat.id)
 
-        checkin_atual=self.db_handler.getDB(msg.chat.id)
-
-        if self.db_handler.is_DB_empty(checkin_atual, msg.chat.id):
+        if self.db_handler.is_DB_empty(current_checkin, msg.chat.id):
             return
 
         preview= f'Tarefas realizadas:\n'
-        for t in checkin_atual['tarefas']:
+        for t in current_checkin['tasks']:
             preview+= f'    -{t}\n'
 
         preview+= f'\nDesafios encontrados:\n'
-        for d in checkin_atual['desafios']:
+        for d in current_checkin['challenges']:
                 preview+= f'    -{d}\n'
         
         preview+= f'\nComentários adicionais:\n'
-        for c in checkin_atual['comentarios']:
+        for c in current_checkin['comments']:
             preview+= f'    -{c}\n'
 
         self.BOT.send_message(msg.chat.id, preview)
@@ -137,30 +137,31 @@ class format_checkin(msg_handler):
         self.db_handler= handler_DB(nossoBOT, self.DATABASE)
 
     def __call__(self, msg: Message):
-        checkin_atual=self.db_handler.getDB(msg.chat.id)
+        current_checkin=self.db_handler.getDB(msg.chat.id)
 
-        if self.db_handler.is_DB_empty(checkin_atual, msg):
+        if self.db_handler.is_DB_empty(current_checkin, msg.chat.id):
             return
 
         title = (f'<b>Check-in semanal</b>')
         bullet_char = " • "
         reply= f'{title}\n\n'
         reply+= '✅ Progresso dessa semana:\n'
-        for tar in checkin_atual['tarefas']:
+        for tar in current_checkin['tasks']:
             reply+= f'{bullet_char}{tar.capitalize()}\n'
 
         reply+= '\n🚧 Bloqueios / dificuldades:\n'
-        for des in checkin_atual['desafios']:
+        for des in current_checkin['challenges']:
             reply+= f'{bullet_char}{des.capitalize()}\n'
 
         reply+= '\n💬 Comentários adicionais (opcional):\n'
-        for com in checkin_atual['comentarios']:
+        for com in current_checkin['comments']:
             reply+= f'{bullet_char}{com.capitalize()}\n'
 
         checkin_sent= self.BOT.send_message(msg.chat.id, reply, parse_mode='HTML')
 
         from random import choice
         from time import sleep
+
         emojis=['😍', '🔥', '❤', '😁', '💯', '🦄', '🎉', '🤩', '👍']
         emoji_para_reagir = choice(emojis)
         sleep(1.5)
@@ -175,9 +176,9 @@ class clear_checkin(msg_handler):
         self.db_handler= handler_DB(nossoBOT, self.DATABASE)
         
     def __call__(self, msg: Message):
-        checkin_atual=self.db_handler.getDB(msg.chat.id)
+        current_checkin=self.db_handler.getDB(msg.chat.id)
 
-        if self.db_handler.is_DB_empty(checkin_atual, msg.chat.id):
+        if self.db_handler.is_DB_empty(current_checkin, msg.chat.id):
             return
         
         btn1_clear= InlineKeyboardButton(text="SIM", callback_data= "clear_sim")

@@ -12,7 +12,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 
-CODELAB_NAME_JSON = "dependencies/internal/name_list.json"
+CODELAB_NAME_JSON = "src/dependencies/internal/name_list.json"
 
 # Função compositora para associar o bot aos handlers desenvolvidos
 # Criando esses handlers por injeção de dependências
@@ -21,7 +21,7 @@ def create_bot(TOKEN):
     bot = telebot.TeleBot(TOKEN)
 
     #Instanciando as dependências dos bots
-    checkin_DB = dados_checkin.Check_in_db()
+    checkin_DB = dados_checkin.Check_in_db(database_path='src/dependencies/internal/users_checkin.db')
 
     # Injetando as dependências nas features
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_JSON)
