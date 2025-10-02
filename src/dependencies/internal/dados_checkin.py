@@ -19,6 +19,7 @@ class Check_in_db(internal_database):
             cursor.execute("""CREATE TABLE IF NOT EXISTS user_checkins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chat_id INTEGER NOT NULL,
+            topic_id INTEGER,
             categoria TEXT NOT NULL,
             item TEXT NOT NULL,
             data TEXT NOT NULL DEFAULT (datetime('now')),
@@ -26,8 +27,11 @@ class Check_in_db(internal_database):
             ) """)
 
             #Cria index para buscas mais rápidas pelo id            
-            cursor.execute("""CREATE INDEX IF NOT EXISTS idx_chatid 
+            cursor.execute("""CREATE INDEX IF NOT EXISTS idx_chat 
                         ON user_checkins(chat_id)""")
+            
+            cursor.execute("""CREATE INDEX IF NOT EXISTS idx_chat_topic 
+                        ON user_checkins(chat_id, topic_id)""")
 
             #Dá o commit do comando realizado
             conexao.commit()
@@ -48,7 +52,7 @@ class Check_in_db(internal_database):
             self.logger.critical('Erro ao criar a tabela')
             raise e
         
-    def add_db(self, chatID: int, cat: str, it: str):
+    def add_db(self, topicID: int | None , chatID: int, cat: str, it: str):
 
         """O método add_db adiciona à nossa tabela o que o usuário escreveu
 
@@ -65,8 +69,8 @@ class Check_in_db(internal_database):
 
             #Inserindo na tabela
             cursor.execute("""
-                            INSERT INTO user_checkins (chat_id, categoria, item)
-                            VALUES (?, ?, ?)""", (chatID, cat, it,))
+                            INSERT INTO user_checkins (topic_id, chat_id, categoria, item)
+                            VALUES (?, ?, ?, ?)""", (topicID, chatID, cat, it,))
 
             #Dá o commit do comando realizado
             conexao.commit()
@@ -89,7 +93,7 @@ class Check_in_db(internal_database):
             self.logger.error(f'Erro ao adicionar item "{it}" na categoria "{cat}" pelo usuário na conversa "{chatID}"')
             raise e
   
-    def extrai_db(self, chatID: int):
+    def extrai_db(self, topicID: int | None, chatID: int):
         """O método extrai_db_a pega os dados que estão na tabela para aquela conversa que requisitou um preview ou um format"""
 
         try:
@@ -100,14 +104,14 @@ class Check_in_db(internal_database):
             #Pega na tabela o que foi providenciado pela conversa
             cursor.execute("""
                         SELECT categoria, item FROM user_checkins
-                        WHERE chat_id = ?
-                        ORDER BY data""", (chatID,))
+                        WHERE chat_id = ? AND topic_id = ?
+                        ORDER BY data""", (chatID, topicID,))
             
             #Guarda as extrações da tabela
             colunas = cursor.fetchall()
 
             #Atualiza a data de última modificação
-            cursor.execute("""UPDATE user_checkins SET data_mod = datetime('now') WHERE chat_id = ?""", (chatID,))
+            cursor.execute("""UPDATE user_checkins SET data_mod = datetime('now') WHERE chat_id = ? AND topic_id = ?""", (chatID, topicID,))
 
             #Dá o commit do comando realizado
             conexao.commit()
@@ -146,7 +150,7 @@ class Check_in_db(internal_database):
             self.logger.error(f'Erro ao procurar os items adiconados na conversa "{chatID}"')
             raise e
         
-    def deleta_db(self, chatID: int):
+    def deleta_db(self, topicID: int | None , chatID: int):
         """O método deleta_db_a apaga todas as entradas feitas naquela conversa
         
         :Param chatID: int que representa a conversa que pediu para deletar os dados"""
@@ -158,7 +162,7 @@ class Check_in_db(internal_database):
 
             #Deleta todos os items ligados a um usuário da tabela
             cursor.execute("""DELETE FROM user_checkins
-                        WHERE chat_id = ?""", (chatID,))
+                        WHERE chat_id = ? AND topic_id = ?""", (chatID, topicID,))
             
             #Dá o commit do comando realizado
             conexao.commit()
@@ -218,21 +222,21 @@ if __name__== '__main__':
         filename='test.log' 
     )
 
-    testingDB.add_db(12, 'tasks', 'Fiz tal coisa')
-    testingDB.add_db(12, 'tasks', 'Fiz outra coisa')
+    testingDB.add_db(None, 12, 'tasks', 'Fiz tal coisa')
+    testingDB.add_db(None,12, 'tasks', 'Fiz outra coisa')
 
 
-    testingDB.add_db(13, 'challenges', 'Tal biblioteca')
-    testingDB.add_db(13, 'challenges', 'Tal função')
-    testingDB.add_db(13, 'comments', 'Fiz mais uma coisa')
+    testingDB.add_db(None,13, 'challenges', 'Tal biblioteca')
+    testingDB.add_db(None,13, 'challenges', 'Tal função')
+    testingDB.add_db(None,13, 'comments', 'Fiz mais uma coisa')
 
-    a= testingDB.extrai_db(12)
-    b= testingDB.extrai_db(13)
-    c= testingDB.extrai_db(14)
+    a= testingDB.extrai_db(None, 12)
+    b= testingDB.extrai_db(None, 13)
+    c= testingDB.extrai_db(None,14)
 
 
-    testingDB.deleta_db(12)
-    testingDB.deleta_db(13)
+    testingDB.deleta_db(None,12)
+    testingDB.deleta_db(None, 13)
 
-    a= testingDB.extrai_db(12)
-    b= testingDB.extrai_db(13)
+    a= testingDB.extrai_db(None,12)
+    b= testingDB.extrai_db(None, 13)
