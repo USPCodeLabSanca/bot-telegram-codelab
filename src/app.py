@@ -3,32 +3,51 @@ from dotenv import load_dotenv
 import os
 
 from handlers import fronts, checkin, setCommands, codelab ,links
+from handlers.codelab import CodelabHandler
+from dependencies.internal import dados_checkin
 
-# Carregando as chaves no .env
-load_dotenv()
 
 # Constantes para instanciar o bot
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
+DB = os.getenv("DB")
+CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
 
-# Instanciando o bot
-bot = telebot.TeleBot(TOKEN)
+# Função compositora para associar o bot aos handlers desenvolvidos
+# Criando esses handlers por injeção de dependências
+def create_bot(TOKEN):
+    #instanciando o bot
+    bot = telebot.TeleBot(TOKEN)
 
-# Instanciando o menu de comandos
-bot.set_my_commands(setCommands.COMANDOS)
+    #Instanciando as dependências dos bots
+    checkin_DB = dados_checkin.Check_in_db(database_path=DB)
 
-# Teste temporátrio??
-@bot.message_handler(commands=['start']) 
-def start(msg: telebot.types.Message):
-    bot.send_message(msg.chat.id, "Eu sou o bot do CodeLab")
+    # Injetando as dependências nas features
+    codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
+    link = links.show_links(bot)
 
-# Instanciando os comandos em /handler
-fronts.show_fronts(bot)
-codelab.say_codelab(bot)
-checkin_BOT= checkin.Check_in(bot)
+    checkin_main = checkin.main_checkin(bot, DATABASE=checkin_DB)
+    checkin_add = checkin.add_checkin(bot, DATABASE=checkin_DB)
+    checkin_clear= checkin.clear_checkin(bot, DATABASE=checkin_DB)
+    checkin_format= checkin.format_checkin(bot, DATABASE=checkin_DB)
+    checkin_preview = checkin.preview_checkin(bot, DATABASE=checkin_DB)
 
-#creates the command /links
-links.show_links(bot)
+    # Composição das featrues no bot
+    bot.register_message_handler(codelab_comm, commands=['codelab'])
 
-# Rodando o bot
-bot.infinity_polling()
+    bot.register_message_handler(link,commands=['links'])
+
+    bot.register_message_handler(checkin_main, commands=['checkin'])
+    bot.register_message_handler(checkin_add, commands=['checkin_add'])
+    bot.register_message_handler(checkin_clear, commands=['checkin_clear'])
+    bot.register_message_handler(checkin_preview, commands=['checkin_preview'])
+    bot.register_message_handler(checkin_format, commands=['checkin_format'])
+
+    # Configurando a lista de comandos do bot
+    bot.set_my_commands(setCommands.COMANDOS)
+
+    return bot
+
+if __name__ == "__main__":
+    bot = create_bot(TOKEN)
+    bot.infinity_polling()

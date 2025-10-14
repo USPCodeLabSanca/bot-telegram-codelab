@@ -1,8 +1,13 @@
 import telebot
 
-def show_links(bot):
-    @bot.message_handler(commands=["links"])
-    def start(msg: telebot.types.Message):
+from handlers.abstract import msg_handler
+
+class show_links(msg_handler):
+    def __init__(self,bot):
+        super().__init__(bot)
+
+    def __call__(self,msg: telebot.types.Message):
+
         links = """
         🧪Aqui estão alguns links úteis do CodeLab🧪:
          - 😺 Github: https://github.com/USPCodeLabSanca
@@ -22,4 +27,4 @@ def show_links(bot):
          - 🌐 Site: https://codelab.icmc.usp.br/
         """
 
-        bot.send_message(msg.chat.id, links)
+        self.BOT.send_message(msg.chat.id,links,message_thread_id=msg.message_thread_id)
