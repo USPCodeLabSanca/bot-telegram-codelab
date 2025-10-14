@@ -25,5 +25,5 @@ class CodelabHandler(msg_handler):
             answer = "O meu grupo se chama " + name + "!"
 
         # Chamando a injeção do método de envio da mensagem
-        self.BOT.send_message(msg.chat.id, answer)
+        self.BOT.send_message(msg.chat.id, answer, message_thread_id=msg.message_thread_id)
 
