@@ -5,8 +5,7 @@ import os
 from handlers import fronts, checkin, setCommands, codelab ,links
 from handlers.codelab import CodelabHandler
 from dependencies.internal import dados_checkin
-# Carregando as chaves no .env
-load_dotenv()
+
 
 # Constantes para instanciar o bot
 TOKEN = os.getenv("TOKEN")
