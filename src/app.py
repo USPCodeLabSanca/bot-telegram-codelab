@@ -2,11 +2,10 @@ import telebot
 from dotenv import load_dotenv
 import os
 
-from handlers import fronts, checkin, setCommands, codelab #,links
+from handlers import fronts, checkin, setCommands, codelab ,links
 from handlers.codelab import CodelabHandler
 from dependencies.internal import dados_checkin
-# Carregando as chaves no .env
-load_dotenv()
+
 
 # Constantes para instanciar o bot
 TOKEN = os.getenv("TOKEN")
@@ -25,6 +24,7 @@ def create_bot(TOKEN):
 
     # Injetando as dependências nas features
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
+    link = links.show_links(bot)
 
     checkin_main = checkin.main_checkin(bot, DATABASE=checkin_DB)
     checkin_add = checkin.add_checkin(bot, DATABASE=checkin_DB)
@@ -37,6 +37,8 @@ def create_bot(TOKEN):
 
     # Composição das featrues no bot
     bot.register_message_handler(codelab_comm, commands=['codelab'])
+
+    bot.register_message_handler(link,commands=['links'])
     bot.register_message_handler(fronts, commands=['fronts'])
     bot.register_message_handler(checkin_main, commands=['checkin'])
     bot.register_message_handler(checkin_add, commands=['checkin_add'])
