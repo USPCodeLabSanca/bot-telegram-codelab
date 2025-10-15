@@ -17,7 +17,7 @@ class CodelabHandler(msg_handler):
 
 
     # Escolhe aleatóriamente um nome errado do grupo para enviar na resposta
-    def __call__(self, msg: Message):
+    async def __call__(self, msg: Message):
         if not self.name_list:
             answer = "O meu grupo se chama Codelab!"
         else:
@@ -25,5 +25,5 @@ class CodelabHandler(msg_handler):
             answer = "O meu grupo se chama " + name + "!"
 
         # Chamando a injeção do método de envio da mensagem
-        self.BOT.send_message(msg.chat.id, answer, message_thread_id=msg.message_thread_id)
+        await self.BOT.send_message(msg.chat.id, answer, message_thread_id=msg.message_thread_id)
 
