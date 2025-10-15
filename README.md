@@ -35,6 +35,8 @@ Para a realização do projeto, foi escolhida a biblioteca `pyTelegramBotApi`
 ```bash
 pip install telebot
 pip install dotenv
+pip install asyncio
+pip install aiohttp
 ```
 
 4. Para sair do ambiente user `deactivate`

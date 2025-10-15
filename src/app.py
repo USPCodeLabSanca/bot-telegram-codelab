@@ -1,5 +1,8 @@
 import telebot
+import asyncio
+import aiohttp
 from dotenv import load_dotenv
+from telebot.async_telebot import AsyncTeleBot
 import os
 
 from handlers import fronts, checkin, setCommands, codelab ,links
@@ -8,6 +11,8 @@ from dependencies.internal import dados_checkin
 
 
 # Constantes para instanciar o bot
+load_dotenv()
+
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 DB = os.getenv("DB")
@@ -15,11 +20,11 @@ CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
 
 # Função compositora para associar o bot aos handlers desenvolvidos
 # Criando esses handlers por injeção de dependências
-def create_bot(TOKEN):
-    #instanciando o bot
-    bot = telebot.TeleBot(TOKEN)
+async def create_bot(TOKEN):
+    # instanciando o bot
+    bot = AsyncTeleBot(TOKEN)
 
-    #Instanciando as dependências dos bots
+    # Instanciando as dependências dos bots
     checkin_DB = dados_checkin.Check_in_db(database_path=DB)
 
     # Injetando as dependências nas features
@@ -44,10 +49,13 @@ def create_bot(TOKEN):
     bot.register_message_handler(checkin_format, commands=['checkin_format'])
 
     # Configurando a lista de comandos do bot
-    bot.set_my_commands(setCommands.COMANDOS)
+    await bot.set_my_commands(setCommands.COMANDOS)
 
     return bot
 
+async def main():
+    bot = await create_bot(TOKEN)
+    await bot.polling(non_stop=True)
+
 if __name__ == "__main__":
-    bot = create_bot(TOKEN)
-    bot.infinity_polling()
+    asyncio.run(main())
