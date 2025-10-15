@@ -54,8 +54,21 @@ async def create_bot(TOKEN):
     return bot
 
 async def main():
-    bot = await create_bot(TOKEN)
-    await bot.polling(non_stop=True)
+    # Instanciando um cliente HTTP global
+    session = aiohttp.ClientSession()
+
+    # Rodando o bot e tratando erros
+    print("> Bot Iniciando...")
+    try: 
+        bot = await create_bot(TOKEN)
+        print("> Bot iniciado com sucesso!")
+
+        # Rodando em loop assíncrono
+        await bot.polling(non_stop=True)
+    except Exception as e:
+        print(f"!> Um erro ocorreu:\n{e}")
+    finally:
+        await session.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
