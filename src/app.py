@@ -32,11 +32,14 @@ def create_bot(TOKEN):
     checkin_format= checkin.format_checkin(bot, DATABASE=checkin_DB)
     checkin_preview = checkin.preview_checkin(bot, DATABASE=checkin_DB)
 
+    fronts = fronts.ShowFronts(bot)
+
+
     # Composição das featrues no bot
     bot.register_message_handler(codelab_comm, commands=['codelab'])
 
     bot.register_message_handler(link,commands=['links'])
-
+    bot.register_message_handler(fronts, commands=['fronts'])
     bot.register_message_handler(checkin_main, commands=['checkin'])
     bot.register_message_handler(checkin_add, commands=['checkin_add'])
     bot.register_message_handler(checkin_clear, commands=['checkin_clear'])
