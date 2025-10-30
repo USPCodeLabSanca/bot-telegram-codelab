@@ -5,7 +5,7 @@ from telebot.types import BotCommand
 COMANDOS = [
     BotCommand('/start', 'Inicia o robô'),
     BotCommand('/checkin', 'Auxilia a criação do check-in semanal'),
-    BotCommand('/fronts',  'Breve descrição das frentes do Codelab'),
+    # BotCommand('/fronts',  'Breve descrição das frentes do Codelab'),
     BotCommand('/codelab', 'Mostra o nome correto do grupo'),
     BotCommand('/links', 'Mostra links úteis do Codelab')
 ]

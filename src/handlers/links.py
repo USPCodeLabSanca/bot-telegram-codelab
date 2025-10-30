@@ -6,7 +6,7 @@ class show_links(msg_handler):
     def __init__(self,bot):
         super().__init__(bot)
 
-    def __call__(self,msg: telebot.types.Message):
+    async def __call__(self,msg: telebot.types.Message):
 
         links = """
         🧪Aqui estão alguns links úteis do CodeLab🧪:
@@ -27,4 +27,4 @@ class show_links(msg_handler):
          - 🌐 Site: https://codelab.icmc.usp.br/
         """
 
-        self.BOT.send_message(msg.chat.id,links,message_thread_id=msg.message_thread_id)
+        await self.BOT.send_message(msg.chat.id,links,message_thread_id=msg.message_thread_id)

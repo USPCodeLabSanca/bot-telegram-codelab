@@ -10,7 +10,7 @@ class msg_handler(ABC):
             setattr(self, key, value)
 
     @abstractmethod
-    def __call__(self, msg:Message):
+    async def __call__(self, msg:Message):
         pass
 
 
