@@ -24,6 +24,9 @@ class CodelabHandler(msg_handler):
             name = random.choice(self.name_list)
             answer = "O meu grupo se chama " + name + "!"
 
+        topic = msg.message_thread_id
+        print(msg.is_topic_message)
+
         # Chamando a injeção do método de envio da mensagem
-        await self.BOT.send_message(msg.chat.id, answer, message_thread_id=msg.message_thread_id)
+        await self.BOT.send_message(msg.chat.id, answer, message_thread_id=topic)
 
