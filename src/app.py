@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 import os
 
-from handlers import fronts, checkin, setCommands, codelab ,links
+from handlers import fronts, checkin, setCommands, codelab ,links, feedbacks
 from handlers.codelab import CodelabHandler
 from dependencies.internal import dados_checkin
 
@@ -17,6 +17,7 @@ TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 DB = os.getenv("DB")
 CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
+TARGET_CHAT_ID = os.getenv("TARGET_CHAT_ID")
 
 # Função compositora para associar o bot aos handlers desenvolvidos
 # Criando esses handlers por injeção de dependências
@@ -37,19 +38,21 @@ async def create_bot(TOKEN):
     checkin_format= checkin.format_checkin(bot, DATABASE=checkin_DB)
     checkin_preview = checkin.preview_checkin(bot, DATABASE=checkin_DB)
 
-    fronts_handler = fronts.ShowFronts(bot)
+    front = fronts.ShowFronts(bot)
+    feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
 
 
     # Composição das featrues no bot
     bot.register_message_handler(codelab_comm, commands=['codelab'])
 
     bot.register_message_handler(link,commands=['links'])
-    bot.register_message_handler(fronts, commands=['fronts'])
+    bot.register_message_handler(front, commands=['fronts'])
     bot.register_message_handler(checkin_main, commands=['checkin'])
     bot.register_message_handler(checkin_add, commands=['checkin_add'])
     bot.register_message_handler(checkin_clear, commands=['checkin_clear'])
     bot.register_message_handler(checkin_preview, commands=['checkin_preview'])
     bot.register_message_handler(checkin_format, commands=['checkin_format'])
+    bot.register_message_handler(feedback, commands=['feedback'])
 
     # Configurando a lista de comandos do bot
     await bot.set_my_commands(setCommands.COMANDOS)
