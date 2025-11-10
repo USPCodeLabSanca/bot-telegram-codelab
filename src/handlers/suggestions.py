@@ -2,52 +2,34 @@ from telebot import TeleBot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReactionTypeEmoji, Message, CallbackQuery
 
 from handlers.abstract import msg_handler
-from dependencies.internal.abstract_db import internal_database
+from dependencies.internal.abstract_db import InternalDatabase
 
 from random import choice
-       
-class handler_DB():
-    def __init__(self, bot:TeleBot, DB:internal_database):
-        """A classe handler_DB foi feita para auxiliar as ações comumente realizadas pelos comandos checkin
-        
-        :Param bot: o nosso Telebot com o token de utilização
-        :Param database: o banco de dados do checkin"""
+              
+class Suggestion(msg_handler):
+    def __init__(self, BOT, suggestion_db:InternalDatabase):
+        super().__init__(BOT)
 
-        self.DB= DB #O banco de dados
+        self.DB= suggestion_db
 
-        self.BOT= bot #O bot do telegram
-
-    def getDB(self, topic_id: int | None, chat_id: int):
-        """O método getDB() acessa o banco de dados atrás dos dados inseridos por um usuário
-        :Param chat_id: O id do usuário que pediu os dados
-        :Return: dicionário com os dados separados por categoria | None, se não houver dados"""
-        return self.DB.extrai_db(topic_id, chat_id)
-    
-    def is_DB_empty(self, check_atual: dict | None, chat_id: int, topic_id:int|None):
-        """O método is_DB_empty() verifica se existem dados para o usuário que requisitou
-        :Param check_atual: o return do método getDB
-        :Param chat_id: O id do usuário que pediu os dados
-        :Return: bool, True se existirem dados, False se não"""
-
-        if not check_atual:
-            self.BOT.send_message(chat_id,'Não há nada no seu check-in semanal no momento :( ', message_thread_id=topic_id)
-            return True
-        
-        else:
-            return False
-       
-class main_checkin(msg_handler):
-    def __init__(self, nossoBOT, **dependencies):
-        super().__init__(nossoBOT, **dependencies)
+    def cancel_btn(self, level: int):
+        cancel = InlineKeyboardButton(text='')
         
     def __call__(self, msg: Message):
         topic = msg.message_thread_id
 
-        menu = '<b>O que você deseja realizar?</b>\n\n'
-        menu += '➕ Adicionar um novo item ao meu check-in:\n/checkin_add\n\n'
-        menu += '🔎 Ver uma prévia simples do que já está no seu check-in:\n/checkin_preview\n\n'
-        menu += '✨ Formatar o check-in atual:\n/checkin_format\n\n'
-        menu += '🚮 Deletar o check-in atual:\n/checkin_clear\n\n'
+        menu = '<b>Com que tipo de sugestão você deseja contribuir ao bot?</b>\n\n'
+        menu += '🐛 Reportar um bug que ocorre quando você usa o bot: FIX \n\n'
+        menu += '✨ Sugerir uma nova funcionalidade para o bot: FEATURE \n\n'
+        menu += '🤖 Outro tipo de sugestão/comentário: OUTRO \n\n'
+
+        btn1 = InlineKeyboardButton(text='🐞 FIX', callback_data= 'suggestion_fix')
+        btn2 = InlineKeyboardButton(text='🌟 FEATURE', callback_data= 'suggestion_feat')
+        btn3 = InlineKeyboardButton(text='💬 OUTRO', callback_data= 'suggestion_other')
+
+        btn_list = [btn1, btn2, btn3]
+
+        keyborad = InlineKeyboardMarkup()
                                    
         self.BOT.send_message(msg.chat.id, menu, parse_mode='HTML', message_thread_id= topic)
 

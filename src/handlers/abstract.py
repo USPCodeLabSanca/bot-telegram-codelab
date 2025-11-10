@@ -3,11 +3,8 @@ from telebot.types import Message
 from telebot import TeleBot
 
 class msg_handler(ABC):
-    def __init__(self, nossoBOT:TeleBot, **dependencies):
+    def __init__(self, nossoBOT:TeleBot):
         self.BOT= nossoBOT
-
-        for key, value in dependencies.items():
-            setattr(self, key, value)
 
     @abstractmethod
     async def __call__(self, msg:Message):
