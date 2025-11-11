@@ -16,6 +16,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 DB = os.getenv("DB")
+GIT_LINK_ISSUES = os.getenv("GIT_LINK_ISSUES")
 CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
 TARGET_CHAT_ID = os.getenv("TARGET_CHAT_ID")
 
@@ -26,22 +27,25 @@ async def create_bot(TOKEN):
     bot = AsyncTeleBot(TOKEN)
 
     # Instanciando as dependências dos bots
+    suggestionsDB = await suggestions_db.SuggestionsDB.create(database_path = DB)
 
     # Injetando as dependências nas features
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
-    link = links.show_links(bot)
-
-    front = fronts.ShowFronts(bot)
     feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
-
+    front = fronts.ShowFronts(bot)
+    link = links.show_links(bot)
+    suggestions_add = suggestions.SuggestionAdd(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestion_main = suggestions.SuggestionMain(bot)
 
     # Composição das featrues no bot
     bot.register_message_handler(codelab_comm, commands=['codelab'])
-
-    bot.register_message_handler(link,commands=['links'])
-    bot.register_message_handler(front, commands=['fronts'])
-
     bot.register_message_handler(feedback, commands=['feedback'])
+    bot.register_message_handler(front, commands=['fronts'])
+    bot.register_message_handler(link,commands=['links'])
+    bot.register_message_handler(suggestion_main, commands=['suggestion'])
+    bot.register_message_handler(suggestions_add, commands=['suggestion_add'])
+    bot.register_message_handler(suggestions_list, commands=['suggestion_list'])
 
     # Configurando a lista de comandos do bot
     await bot.set_my_commands(setCommands.COMANDOS)

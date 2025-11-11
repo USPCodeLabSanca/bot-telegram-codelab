@@ -5,8 +5,8 @@ import logging
 from dependencies.internal.abstract_db import InternalDatabase, DBResult
 
 class SuggestionsDB(InternalDatabase):
-    def __init__(self, session):
-        super().__init__(session)
+    def __init__(self, database_path):
+        super().__init__(database_path)
         self.categories = ("fix", "feature", "outro",)
 
     async def init_db(self):
@@ -19,7 +19,8 @@ class SuggestionsDB(InternalDatabase):
                     """CREATE TABLE IF NOT EXISTS bot_suggestions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     category TEXT NOT NULL,
-                    suggestion TEXT NOT NULL,
+                    suggestion_title TEXT NOT NULL,
+                    suggestion_body TEXT NOT NULL,
                     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     ) """)
                 
@@ -39,7 +40,7 @@ class SuggestionsDB(InternalDatabase):
                     print(e)
 
 
-    async def add_db(self, category: str, suggestion:str):
+    async def add_db(self, category: str, suggestion_title: str, suggestion_body: str):
 
         if category not in self.categories:
             return DBResult(success=False, data= None, error=ValueError(f"Invalid category: {category}"))
@@ -51,18 +52,18 @@ class SuggestionsDB(InternalDatabase):
 
                 #Inserindo na tabela
                 await cursor.execute("""
-                                INSERT INTO bot_suggestions (category, suggestion)
-                                VALUES (?, ?)""", (category, suggestion,))
+                                INSERT INTO bot_suggestions (category, suggestion_title, suggestion_body)
+                                VALUES (?, ?, ?)""", (category, suggestion_title, suggestion_body,))
 
                 #Dá o commit do comando realizado
                 await db.commit()
 
                 #Loga o evento realizado       
-                self.logger.info(f'{category}: "{suggestion}" adicionado à tabela de sugestões com sucesso!')
+                self.logger.info(f'{category}: "{suggestion_title}: {suggestion_body}" adicionado à tabela de sugestões com sucesso!')
 
                 await cursor.execute("SELECT MAX(id) FROM bot_suggestions;")
                 id = await cursor.fetchone()
-                await cursor.execute("SELECT category, suggestion FROM bot_suggestions WHERE id = ?", (id[0],))
+                await cursor.execute("SELECT category, suggestion_title, suggestion_body FROM bot_suggestions WHERE id = ?", (id[0],))
                 row = await cursor.fetchone()
                 self.logger.debug(f'A mais nova row da tabela é: {row}')
 
@@ -74,7 +75,7 @@ class SuggestionsDB(InternalDatabase):
                     await db.rollback() 
 
                 # Loga o erro ocorrido 
-                self.logger.error(f'Erro ao adicionar "{category}: {suggestion}"')
+                self.logger.error(f'Erro ao adicionar "{category}: {suggestion_title}: {suggestion_body}"')
                 print(e)
                 return DBResult(success=False, data=None, error=e)
             
@@ -85,7 +86,7 @@ class SuggestionsDB(InternalDatabase):
                 cursor = await db.cursor() 
 
                 #Seleciona tudo da tabela
-                await cursor.execute("""SELECT category, suggestion FROM bot_suggestions ORDER BY date""")
+                await cursor.execute("""SELECT category, suggestion_title, suggestion_body FROM bot_suggestions ORDER BY date""")
                 
                 #Guarda as extrações da tabela
                 rows = await cursor.fetchall()
@@ -98,10 +99,10 @@ class SuggestionsDB(InternalDatabase):
                 }
                 table_empty = True
 
-                for cat, sug in rows:
+                for cat, sug_title, sug_body in rows:
                     if cat in suggestions.keys():
                         table_empty = False
-                        suggestions[cat].append(sug)             
+                        suggestions[cat].append((sug_title, sug_body,))        
 
                 # Verifica se há itens para enviar
                 if table_empty: 
@@ -130,18 +131,18 @@ class SuggestionsDB(InternalDatabase):
                 cursor = await db.cursor() 
 
                 #Seleciona tudo da tabela
-                await cursor.execute("""SELECT suggestion FROM bot_suggestions
+                await cursor.execute("""SELECT suggestion_title, suggestion_body FROM bot_suggestions
                                     WHERE category = ?
                                     ORDER BY date""", (category,))
                 
                 #Guarda as extrações da tabela
                 rows = await cursor.fetchall()
 
-                suggestions = []
+                suggestions = {category: []}
                 table_empty = True
 
                 for sug in rows:
-                    suggestions.append(sug[0])
+                    suggestions[category].append(sug)
                     table_empty = False         
 
                 # Verifica se há itens para enviar
@@ -159,22 +160,22 @@ class SuggestionsDB(InternalDatabase):
                 self.logger.error(f'Erro ao procurar as sugestões')
                 return DBResult(success=False, data=None, error=e)
             
-    async def delete_suggestion(self, suggestion:str):
+    async def delete_suggestion(self, suggestion_title:str):
         async with aiosqlite.connect(self.DB) as db:
             try:
                 #Estabelece a conexão e cria um cursor
                 cursor = await db.cursor() 
 
                 #Deleta a sugestão específica
-                await cursor.execute("""DELETE FROM bot_suggestions WHERE suggestion = ? """, (suggestion,))
+                await cursor.execute("""DELETE FROM bot_suggestions WHERE suggestion_title = ? """, (suggestion_title,))
                 
                 #Dá o commit do comando realizado
                 await db.commit()
 
                 #Loga o evento ocorrido
-                self.logger.info(f'Sugestão {suggestion} deletada da database')
+                self.logger.info(f'Sugestão {suggestion_title} deletada da database')
 
-                return DBResult(success=True, data=suggestion, error=None)
+                return DBResult(success=True, data=suggestion_title, error=None)
 
             except (sqlite3.Error, Exception) as e:
                 if db:
@@ -182,7 +183,7 @@ class SuggestionsDB(InternalDatabase):
                     await db.rollback() 
 
                 # Loga o erro ocorrido 
-                self.logger.error(f'Erro ao deletar "{suggestion}"')
+                self.logger.error(f'Erro ao deletar "{suggestion_title}"')
                 print(e)
                 return DBResult(success=False, data=None, error=e)
 
@@ -213,7 +214,7 @@ class SuggestionsDB(InternalDatabase):
                     await db.rollback() 
 
                 # Loga o erro ocorrido 
-                self.logger.error(f'Erro ao deletar os items antigos"')
+                self.logger.error(f'Erro ao deletar os items antigos')
                 print(e)
            
 
