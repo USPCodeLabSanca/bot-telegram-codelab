@@ -4,9 +4,11 @@ from handlers.abstract import msg_handler
 from handlers.errors import catch_callbackquery_errors, catch_message_errors
 
 from dependencies.internal.suggestions_db import SuggestionsDB
-from dependencies.internal.bot_errors import DBError, PoorUseOfCommand
+from dependencies.internal.bot_errors import DBError, PoorUseOfCommand, ExecutionError
 
 from random import choice
+import json
+from datetime import datetime
 
 class SuggestionMain(msg_handler):
     def __init__(self, BOT):
@@ -14,15 +16,16 @@ class SuggestionMain(msg_handler):
 
     @catch_message_errors() 
     async def __call__(self, msg: Message):
-
         menu = '<b>O que você deseja realizar?</b>\n\n'
 
-        menu += '➕ Contribuir anonimamente com uma sugestão de melhoria para o BOT_A_SER_NOMEADO:\n/suggestion_add\n\n'
+        menu += '➕ Contribuir com uma sugestão de melhoria para o BOT_A_SER_NOMEADO:\n/suggestion_add\n\n'
         menu += '📂 Ver sugestões pendentes para o BOT_A_SER_NOMEADO:\n/suggestion_list\n\n'
 
         menu += 'Para cooperar com uma sugestão clara e bem elaborada, é recomendado'
-        menu += ' o uso do comando /sugestion_guide para ler instruções, dicas e exemplos de'
-        menu += ' como construir uma issue de maneira adequada'
+        menu += ' o uso do comando /suggestion_guide para ler instruções, dicas e exemplos de'
+        menu += ' como construir uma issue de maneira adequada e também o uso comando /suggestion_list'
+        menu += ' para evitar issues repetidas ou muito similares'
+        
                                    
         await self.BOT.send_message(
             msg.chat.id,
@@ -181,18 +184,25 @@ class SuggestionAdd(msg_handler):
             message_id=message_id_to_delete_inline_keyboard,
             reply_markup=None
         )
-
-        emojis=['😍', '🔥', '❤', '😁', '💯', '🎉', '🤩', '👍']
-        await self.BOT.set_message_reaction(msg.chat.id, msg.id, [ReactionTypeEmoji(choice(emojis))])
-
-
         if msg.text.find(':') == -1:
-            raise PoorUseOfCommand('A formatação da sua sugestão está deviante do esperado!')
+            raise PoorUseOfCommand(
+                error_text='É necessário separar o título e o corpo de texto com dois-pontos (:)!',
+                reply=True
+                )
+        
+        if len(msg.text) > 600:
+            raise PoorUseOfCommand(
+                error_text='Você excedeu o tamanho máximo de caracteres permitidos por sugestão (600)!',
+                reply=True
+                )
 
         suggestion = msg.text.split(':', 1)
 
         suggestion_title = suggestion[0].strip()
         suggestion_body = suggestion[1].strip()
+
+        emojis=['😍', '🔥', '❤', '😁', '💯', '🎉', '🤩', '👍']
+        await self.BOT.set_message_reaction(msg.chat.id, msg.id, [ReactionTypeEmoji(choice(emojis))])
 
         self.user_states[msg.from_user.id] = {
             "state": "awaiting_confirmation",
@@ -328,4 +338,147 @@ class SuggestionList(msg_handler):
             )
 
 
-#class SuggestionHelper(msg_handler):
+class SuggestionHelper(msg_handler):
+    def __init__(self, BOT, examples_json):
+        super().__init__(BOT)
+        
+        with open(examples_json, "r", encoding="utf-8") as file:
+            self.examples_dict = json.load(file)
+
+        self.callbackquery_handler()
+
+    @catch_message_errors() 
+    async def __call__(self, msg: Message):
+
+        guide = '<b>GUIA PARA CONSTRUÇÃO DE ISSUES:</b>\n\n'
+
+        guide1 = '<b>1. Regras:</b>\n'
+        guide1 += '   <b>-></b> Uma issue deve conter um <b>título</b> e um <b>corpo de texto</b>, separados por dois-pontos (:)\n'
+        guide1 += '   <b>-></b> Uma issue deve conter <b>no máximo 600</b> caractéres\n\n'
+        
+        guide2 = '<b>2. Instruções e dicas:</b>\n'
+        guide2 += '   <b>-></b> A issues são divididas em <b>3</b> categorias:\n'
+        guide2 += '      • <b>feature</b> - Descreve alguma ideia de funcionalidade nova que seria interessante implementar no bot\n'
+        guide2 += '      • <b>fix</b> - Descreve algum bug que acontece durante o uso do bot\n'
+        guide2 += '      • <b>outro</b> - Descreve algum outro tipo de sugestão que não seja um bug para consertar ou uma funcionalidade nova\n\n'
+
+        guide2 += '   <b>-></b> Para redigir uma <b><i>feature</i></b>, recomenda-se incluir:\n'
+        guide2 += '      • descrição da "lacuna" que a sua sugestão preencheria\n'
+        guide2 += '      • descrição da solução que a sua sugestão apresenta para tal "lacuna"\n\n'
+
+        guide2 += '   <b>-></b> Para redigir um <b><i>fix</i></b>, recomenda-se incluir:\n'
+        guide2 += '      • descrição do bug que está ocorrendo\n'
+        guide2 += '      • etapas de como outra pessoa poderia reproduzir o bug\n'
+        guide2 += '      • descrição do comportamento esperado, caso não existesse o bug\n'
+        guide2 += '      • caso você julgue pertinente, inclua contextos adicionais, como o seu sistema operacional, navegador, etc\n\n'
+
+        guide2 += '   <b>-></b> Para redigir um <b><i>outro</i></b>, recomenda-se incluir qualquer informação que você julgar pertinente\n'
+
+        guide3 = '<b>3. Exemplos práticos:</b>\n'
+        guide3 += '   <b>-></b> Consulte abaixo alguns exemplos disponíveis de sugestões\n'
+
+        btn1 = InlineKeyboardButton(text='🌟 Exemplo de sugestão de feature', callback_data='suggestion_example_feature')
+        btn2 = InlineKeyboardButton(text='🐛 Exemplo de sugestão de fix', callback_data='suggestion_example_fix')
+        btn3 = InlineKeyboardButton(text='💬 Exemplo de sugestão de outro', callback_data='suggestion_example_outro')
+
+        keyboard = InlineKeyboardMarkup(row_width=1)
+
+        keyboard.add(btn1, btn2, btn3)
+
+        await self.BOT.send_message(
+            chat_id=msg.chat.id,
+            text=guide,
+            parse_mode='HTML',
+            message_thread_id=msg.message_thread_id
+        )
+
+        await self.BOT.send_message(
+            chat_id=msg.chat.id,
+            text=guide1,
+            parse_mode='HTML',
+            message_thread_id=msg.message_thread_id
+        )
+
+        await self.BOT.send_message(
+            chat_id=msg.chat.id,
+            text=guide2,
+            parse_mode='HTML',
+            message_thread_id=msg.message_thread_id
+        )
+
+        await self.BOT.send_message(
+            chat_id=msg.chat.id,
+            text=guide3,
+            parse_mode='HTML',
+            message_thread_id=msg.message_thread_id,
+            reply_markup= keyboard
+        )
+
+    def callbackquery_handler(self):
+
+        @self.BOT.callback_query_handler(func=lambda call: call.data.startswith('suggestion_example'))
+        @catch_callbackquery_errors(self.BOT)
+        async def example(call: CallbackQuery):
+            
+            type_of_issue = call.data.split("_")[2]
+
+            await self.BOT.answer_callback_query(call.id, text= f"Mostrando exemplo de {type_of_issue}")
+
+            suggestion_example = f'<b>EXEMPLO DE SUGESTÃO DE {type_of_issue.upper()}:</b>\n\n'
+            suggestion_example += choice(self.examples_dict[type_of_issue])
+
+            await self.BOT.send_message(
+                chat_id=call.message.chat.id,
+                text= suggestion_example,
+                parse_mode='HTML',
+                message_thread_id=call.message.message_thread_id
+            )
+
+
+class BuggedCommand(msg_handler):
+    def __init__(self, BOT):
+        super().__init__(BOT)
+        self.callbackquery_handler()
+
+    @catch_message_errors() 
+    async def __call__(self, msg: Message):
+
+        today = datetime.now()
+
+        #Não é pra funcionar quintas feiras
+        if today.weekday() == 3:
+            return
+        
+        menu = '😃 Eu sou um bug!'
+        btn1 = InlineKeyboardButton(text='bug 1', callback_data= 'bug_1')
+        btn2 = InlineKeyboardButton(text='bug 2', callback_data= 'bug_2')
+
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(btn1, btn2)
+
+
+        #Envia 2 vezes a mesma mensagem                        
+        await self.BOT.send_message(
+            msg.chat.id,
+            menu,
+            reply_markup= keyboard,
+            parse_mode='HTML',
+            message_thread_id = msg.message_thread_id)
+        
+        await self.BOT.send_message(
+            msg.chat.id,
+            menu,
+            reply_markup= keyboard,
+            parse_mode='HTML',
+            message_thread_id = msg.message_thread_id)
+        
+
+    def callbackquery_handler(self):
+
+        @self.BOT.callback_query_handler(func=lambda call: call.data.startswith('bug_2'))
+        @catch_callbackquery_errors(self.BOT)
+        async def error(call: CallbackQuery):
+           
+            await self.BOT.answer_callback_query(call.id, text= "⚠️ ERRO!!!")
+
+            raise ExecutionError(edit_msg=call.message, keyboard=None)

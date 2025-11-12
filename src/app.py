@@ -18,6 +18,7 @@ USER = os.getenv("USER")
 DB = os.getenv("DB")
 GIT_LINK_ISSUES = os.getenv("GIT_LINK_ISSUES")
 CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
+SUGGESTION_EXAMPLES = os.getenv("SUGGESTION_EXAMPLES")
 TARGET_CHAT_ID = os.getenv("TARGET_CHAT_ID")
 
 # Função compositora para associar o bot aos handlers desenvolvidos
@@ -30,21 +31,25 @@ async def create_bot(TOKEN):
     suggestionsDB = await suggestions_db.SuggestionsDB.create(database_path = DB)
 
     # Injetando as dependências nas features
+    bugged_command = suggestions.BuggedCommand(bot)
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
     feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
     front = fronts.ShowFronts(bot)
     link = links.show_links(bot)
     suggestions_add = suggestions.SuggestionAdd(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
     suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
     suggestion_main = suggestions.SuggestionMain(bot)
 
     # Composição das featrues no bot
+    bot.register_message_handler(bugged_command, commands=['bugged_command'])
     bot.register_message_handler(codelab_comm, commands=['codelab'])
     bot.register_message_handler(feedback, commands=['feedback'])
     bot.register_message_handler(front, commands=['fronts'])
     bot.register_message_handler(link,commands=['links'])
     bot.register_message_handler(suggestion_main, commands=['suggestion'])
     bot.register_message_handler(suggestions_add, commands=['suggestion_add'])
+    bot.register_message_handler(suggestion_guide, commands=['suggestion_guide'])
     bot.register_message_handler(suggestions_list, commands=['suggestion_list'])
 
     # Configurando a lista de comandos do bot
