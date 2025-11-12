@@ -33,6 +33,7 @@ class SuggestionMain(msg_handler):
             parse_mode='HTML',
             message_thread_id=msg.message_thread_id)
 
+
 class SuggestionAdd(msg_handler):
     def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str):
         super().__init__(BOT)
@@ -140,7 +141,7 @@ class SuggestionAdd(msg_handler):
 
             hyperlink_to_git = f'<a href="{self.git_link}">issues</a>'
             
-            thanks_message1 = f'Nova sugestão adicionada com sucesso!\n • Para ver por aqui uma lista das sugestões pedentes, use o comando /suggestions_list\n • Para ver as sugestões pendentes no github, acesse as {hyperlink_to_git} abertas no repositório do telegram_bot'
+            thanks_message1 = f'Nova sugestão adicionada com sucesso!\n • Para ver por aqui uma lista das sugestões pedentes, use o comando /suggestion_list\n • Para ver as sugestões pendentes no github, acesse as {hyperlink_to_git} abertas no repositório do telegram_bot'
             thanks_message2 = f'Muito obrigado pela sua contribuição! 😉'
 
             await self.BOT.edit_message_text(
@@ -304,26 +305,54 @@ class SuggestionList(msg_handler):
             if not result.success:
                 raise DBError(keyboard=None)
             
-                       
+            suggestions_dict = {
+                "feature": [],
+                "fix": [],
+                "outro": []
+            }
+            
             for category in type_of_issue_list:
-                formatted = f'<b>{category.upper()}'
+                counter = 0
+                smaller_list = []
 
-                if category in ('feature', 'outro'):
-                    formatted += 'S:</b>\n\n'
+                for tup in result.data[category]:
+                    if counter >= 5:
+                        suggestions_dict[category].append(smaller_list.copy())
+                        smaller_list = []
+                        counter = 0
 
-                else:
-                    formatted += 'ES:</b>\n\n'        
+                    smaller_list.append(tup)
+                    counter += 1     
 
-                for title, body in result.data[category]:
-                    formatted += f'    -> <i>{title}: </i>'
-                    formatted += f'{body}\n\n'
+                suggestions_dict[category].append(smaller_list.copy())                                         
+                       
+            for category in suggestions_dict.keys():
+                counter = 1
 
-                await self.BOT.send_message(
-                    chat_id=call.message.chat.id,
-                    text=formatted,
-                    parse_mode='HTML',
-                    message_thread_id=call.message.message_thread_id
-                )
+                for small_list in suggestions_dict[category]:
+
+                    formatted = f'<b>{category.upper()}'
+
+                    if category in ('feature', 'outro'):
+                        formatted += 'S: '
+
+                    else:
+                        formatted += 'ES: '   
+
+                    formatted +=  f'[{counter} a {counter -1 + len(small_list)}]</b>\n\n' 
+
+                    for title, body in small_list:
+                        formatted += f'    <b>-></b> <i>{title}: </i>'
+                        formatted += f'{body}\n\n'
+
+                    await self.BOT.send_message(
+                        chat_id=call.message.chat.id,
+                        text=formatted,
+                        parse_mode='HTML',
+                        message_thread_id=call.message.message_thread_id
+                    )
+
+                    counter += len(small_list)
 
             hyperlink_to_git = f'<a href="{self.git_link}">issues</a>'
             

@@ -41,7 +41,7 @@ async def create_bot(TOKEN):
     suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
     suggestion_main = suggestions.SuggestionMain(bot)
 
-    # Composição das featrues no bot
+    # Composição das features no bot
     bot.register_message_handler(bugged_command, commands=['bugged_command'])
     bot.register_message_handler(codelab_comm, commands=['codelab'])
     bot.register_message_handler(feedback, commands=['feedback'])
