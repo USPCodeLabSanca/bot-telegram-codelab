@@ -9,6 +9,8 @@ from dependencies.internal.bot_errors import DBError, PoorUseOfCommand, Executio
 from random import choice
 import json
 from datetime import datetime
+import requests
+import aiohttp
 
 class SuggestionMain(msg_handler):
     def __init__(self, BOT):
@@ -40,7 +42,7 @@ class SuggestionMain(msg_handler):
 
 
 class SuggestionAdd(msg_handler):
-    def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str):
+    def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str, git_api: str, git_token: str, session: aiohttp.ClientSession ):
         """A classe SuggestionAdd recebe a sugestão com qual o usuário deseja contribuir.
         Primeiro é decidido qual tipo de sugestão será adicionada, depois faz-se a validação
         e a confirmação. A manutenção do banco de dados também é feita aqui"""
@@ -50,9 +52,14 @@ class SuggestionAdd(msg_handler):
         self.DB = suggestion_db # A clase do banco de dados de sugestões
         self.git_link = git_link # O link para as issues do BOT_A_SER_NOMEADO no github do Codelab
         self.user_states = {} # Dicionário que guarda os estados de usuários
+        self.git_api = git_api
+        self.git_token = git_token
+        self.session = session
 
         self.callbackquery_handler() # Aciona as callback_queries
         self.state_handler() # Aciona o manejo de estados
+
+
 
     def cancel_btn(self, level: int):
         """Retorna um botão de cancelar para incluir nos keyboards"""
@@ -153,11 +160,15 @@ class SuggestionAdd(msg_handler):
             suggestion_title = state_info["suggestion_title"]
             suggestion_body= state_info["suggestion_body"] 
 
-            #Adiciona ao banco de dados
-            result = await self.DB.add_db(type_of_issue, suggestion_title, suggestion_body)
+            # Adiciona ao banco de dados
+            result_db = await self.DB.add_db(type_of_issue, suggestion_title, suggestion_body)
 
-            if not result.success:
+            if not result_db.success:
                 raise DBError()
+
+            # Adiciona ao git
+            result_git = await self.add_to_git(type_of_issue, suggestion_title, suggestion_body)
+            result_git.raise_for_status()
 
             await self.BOT.answer_callback_query(call.id, text=f'🥳 Nova sugestão adicionada com sucesso!')
 
@@ -262,6 +273,42 @@ class SuggestionAdd(msg_handler):
             reply_markup=keyboard
         )
 
+    async def add_to_git(self, type_of_issue: str, title: str, body: str):
+        
+        #Adiciona a issue ao github do codelab
+
+        # Valida a categoria
+        if type_of_issue == "feature":
+            label = ["idea", "enhancement"]
+            type = type_of_issue
+
+        elif type_of_issue == "fix":
+            label = ["bug", "Change"]
+            type = "bug"
+
+        elif type_of_issue == "outro":
+            label = []
+            type = None
+            
+        else:
+            raise ValueError('Categoria de sugestão inválida!')
+
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self.git_token}",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+        json = {
+            "title": f"{type_of_issue.capitalize()}: {title}",
+            "body": body,
+            "labels": label,
+            "type": type
+        }
+
+        response = await self.session.post(self.git_api, headers=headers, json=json)
+        return response
+     
 
 class SuggestionList(msg_handler):
     def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str):

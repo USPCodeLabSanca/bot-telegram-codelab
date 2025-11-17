@@ -1,4 +1,3 @@
-import telebot
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
@@ -17,13 +16,15 @@ TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
 DB = os.getenv("DB")
 GIT_LINK_ISSUES = os.getenv("GIT_LINK_ISSUES")
+GIT_API_ISSUE_ENDPOINT = os.getenv("GIT_API_ISSUE_ENDPOINT")
+GIT_TOKEN = os.getenv("GIT_TOKEN")
 CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
 SUGGESTION_EXAMPLES = os.getenv("SUGGESTION_EXAMPLES")
 TARGET_CHAT_ID = os.getenv("TARGET_CHAT_ID")
 
 # Função compositora para associar o bot aos handlers desenvolvidos
 # Criando esses handlers por injeção de dependências
-async def create_bot(TOKEN):
+async def create_bot(TOKEN, session):
     # instanciando o bot
     bot = AsyncTeleBot(TOKEN)
 
@@ -36,7 +37,7 @@ async def create_bot(TOKEN):
     feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
     front = fronts.ShowFronts(bot)
     link = links.show_links(bot)
-    suggestions_add = suggestions.SuggestionAdd(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestions_add = suggestions.SuggestionAdd(bot, suggestionsDB, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
     suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
     suggestion_main = suggestions.SuggestionMain(bot)
@@ -64,7 +65,7 @@ async def main():
     # Rodando o bot e tratando erros
     print("> Bot Iniciando...")
     try: 
-        bot = await create_bot(TOKEN)
+        bot = await create_bot(TOKEN, session)
         print("> Bot iniciado com sucesso!")
 
         # Rodando em loop assíncrono
