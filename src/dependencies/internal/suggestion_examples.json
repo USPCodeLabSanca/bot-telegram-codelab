@@ -10,7 +10,7 @@
         "Botão do comando /bugged_command: Quando eu tento usar o primeiro botão do comando /bugged_command, nada acontece. Como reproduzir: Use o comando bugged_command, clique no primeiro botão",
         "/bugged_command está enviando mensagens dupicadas: O comando /bugeed_command, envia a mesma mensagem 2 vezes. Como reproduzir: Use o comando bugged_command.",
         "Botão do comando /bugged_command sempre gera erro: O segundo botão do comando /bugged_command sempre gera uma mensagem de erro quando eu clico nele, Como reproduzir: Use o comando bugged_command, clique no segundo botão",
-        "/bugged_command não funciona quintas-feiras: Sempre que eu tento usar o comando /bugged_command em uma quinta feira, ele não funciona. Como reproduzir: Espere dar quinta-feira, use o comando bugged_command"
+        "/bugged_command não funciona quintas-feiras: Sempre que eu tento usar o comando /bugged_command em uma quinta feira (de acordo com o fuso GMT), ele não funciona. Como reproduzir: Espere dar quinta-feira no fuso GMT, use o comando bugged_command"
     ],
 
     "outro": [

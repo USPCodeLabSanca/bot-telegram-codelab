@@ -113,7 +113,7 @@ class SuggestionsDB(InternalDatabase):
                 else:
 
                     self.logger.debug(f'Dados da tabela: {suggestions}')
-                    return DBResult(success=True, data= suggestions, error=None)
+                    return DBResult(success=True, data=suggestions, error=None)
                 
             except (sqlite3.Error, Exception) as e:
                 # Loga o erro ocorrido 
@@ -187,7 +187,7 @@ class SuggestionsDB(InternalDatabase):
                 print(e)
                 return DBResult(success=False, data=None, error=e)
 
-    async def maintenance_db(self, time: int = 240):
+    async def maintenance_db(self, time: int = 180):
         """O método maintenance_db é feito pra apagar sugestões antigas"""
 
         async with aiosqlite.connect(self.DB) as db:
