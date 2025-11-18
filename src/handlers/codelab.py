@@ -5,9 +5,12 @@ import telebot
 from telebot.types import Message
 
 from handlers.abstract import msg_handler
+from utils.isAdmin import admin_only
 
 
 # Handler para o comando /codelab
+
+
 class CodelabHandler(msg_handler):
     def __init__(self, bot, codelab_name_json):
         # Lendo os dados no json
