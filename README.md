@@ -37,6 +37,7 @@ pip install telebot
 pip install dotenv
 pip install asyncio
 pip install aiohttp
+pip install aiosqlite
 ```
 
 4. Para sair do ambiente user `deactivate`
@@ -69,5 +70,3 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque vel ullamc
 
 **Telegram:** @user
 -->
-
-

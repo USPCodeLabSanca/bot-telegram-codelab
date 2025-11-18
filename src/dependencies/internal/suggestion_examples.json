@@ -1,0 +1,22 @@
+{
+    "feature":[
+        "Comando novo para fornecer links úteis: Para não termos que ficar procurando os links importantes do Codelab (por exemplo o link do git, do instagram, do Notion ou do site) em conversas antigas, implementar um novo comando /links seria uma funcionalidade útil para o BOT_A_SER_NOMEADO. Ao usar tal comando, o bot deverá enviar uma mensagem contendo todos os links relevantes do grupo para o usuário",
+        "Função Codslabes: Uma brincadeira que seria legal de implementar é o comando /codelab, o qual enviaria uma mensagem contendo um versão errada do nome do grupo, tipo \"Codaleb\" ou \"Codlabs\"",
+        "Funcionalidade de feedbacks anônimos: Para criar um maneira de enviar um relato anônimo para os coordenadores do dev.boost à qualquer momento e não só nas reuniões, seria interessante implementar o comando /feedbacks, o qual enviaria o feedback do usuário anonimamente para os coordenadores, criando uma linha de comunicação mais simples do que preencher um formulário toda reunião",
+        "Comando para uso interno: Um recurso legal para adicionarmos ao BOT_A_SER_NOMEADO seria um comando /fronts que resumiria a atuação das diferentes frentes do codelab em uma mensagem para o usuário"
+    ],
+
+    "fix":[
+        "Botão do comando /bugged_command: Quando eu tento usar o primeiro botão do comando /bugged_command, nada acontece. Como reproduzir: Use o comando bugged_command, clique no primeiro botão",
+        "/bugged_command está enviando mensagens dupicadas: O comando /bugeed_command, envia a mesma mensagem 2 vezes. Como reproduzir: Use o comando bugged_command.",
+        "Botão do comando /bugged_command sempre gera erro: O segundo botão do comando /bugged_command sempre gera uma mensagem de erro quando eu clico nele, Como reproduzir: Use o comando bugged_command, clique no segundo botão",
+        "/bugged_command não funciona quintas-feiras: Sempre que eu tento usar o comando /bugged_command em uma quinta feira (de acordo com o fuso GMT), ele não funciona. Como reproduzir: Espere dar quinta-feira no fuso GMT, use o comando bugged_command"
+    ],
+
+    "outro": [
+        "Ideia de design: o olho esquerdo do BOT_A_SER_NOMEADO poderia ser laranja ao invés de ciano",
+        "Melhoria de UI: no comando X, a formatação da mensagem torna a compreensão mais dificil. Quebrar em paragrafos menores, mais organizados, facilitaria a leitura",
+        "Documentação insuficiente: ao ler a documentação do banco de dados do BOT_A_SER_NOMEADO no seu github. Adicionar um diagrama ilustraria melhor as relações entre as diferentes tabelas",
+        "Novo exemplo de sugestão para adicionar ao guia: um outro exemplo legal de \"outro\" para por no guia de sugestões seria: \"TITULO_X: CORPO_x\""
+    ]
+}
