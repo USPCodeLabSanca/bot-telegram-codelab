@@ -30,14 +30,10 @@ Para a realização do projeto, foi escolhida a biblioteca `pyTelegramBotApi`
 1. entre na pasta do código fonte: `cd /src`
 2. Crie o ambiente virtual com `python3 -m venv .venv`
 3. Ative o ambiente no terminal com `source .venv/bin/activate`
-4. Uma vez dentro do ambiente virtual, instale as bibliotecas utilizadas no projeto
+4. Uma vez dentro do ambiente virtual, instale as bibliotecas utilizadas no projeto com:
 
 ```bash
-pip install telebot
-pip install dotenv
-pip install asyncio
-pip install aiohttp
-pip install aiosqlite
+pip install -r requirements.txt
 ```
 
 4. Para sair do ambiente user `deactivate`
