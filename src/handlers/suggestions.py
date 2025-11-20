@@ -1,7 +1,7 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReactionTypeEmoji, Message, CallbackQuery
 
 from handlers.abstract import msg_handler
-from handlers.errors import catch_callbackquery_errors, catch_message_errors
+from utils.errors import catch_callbackquery_errors, catch_message_errors
 
 from dependencies.internal.suggestions_db import SuggestionsDB
 from dependencies.internal.bot_errors import DBError, PoorUseOfCommand, ExecutionError
