@@ -49,12 +49,13 @@ class SuggestionAdd(msg_handler):
 
         self.git_link = git_link # O link para as issues do BOT_A_SER_NOMEADO no github do Codelab
         self.user_states = {} # Dicionário que guarda os estados de usuários
-        self.git_api = git_api
-        self.git_token = git_token
-        self.session = session
+        self.git_api = git_api # Endpoint da api de adicionar issues
+        self.git_token = git_token # Token para poder usar a api do git
+        self.session = session # Sessão para fazer requests
 
         self.callbackquery_handler() # Aciona as callback_queries
         
+        # Adicionando um "handler" para ler as sugestões desde que o usuário esteja no dicionário de estados
         self.BOT.register_message_handler(
             self.new_suggestion,
             func=lambda msg: msg.from_user.id in self.user_states.keys()
