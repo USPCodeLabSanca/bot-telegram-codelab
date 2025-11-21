@@ -3,7 +3,7 @@ from functools import wraps
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardMarkup, ReplyParameters, CallbackQuery
 
-from dependencies.internal.bot_errors import *
+from utils.bot_errors import *
 from handlers.abstract import msg_handler
 
 

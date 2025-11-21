@@ -5,7 +5,6 @@ import aiohttp
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 
-from dependencies.internal import suggestions_db
 from handlers import codelab, feedbacks, fronts, links, suggestions, start, help
 from utils import setCommands
 
@@ -29,9 +28,6 @@ async def create_bot(TOKEN, session):
     # instanciando o bot
     bot = AsyncTeleBot(TOKEN)
 
-    # Instanciando as dependências dos bots
-    suggestionsDB = await suggestions_db.SuggestionsDB.create(database_path=DB)
-
     # Injetando as dependências nas features
     bugged_command = suggestions.BuggedCommand(bot)
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
@@ -40,9 +36,9 @@ async def create_bot(TOKEN, session):
     help_command = help.Help(bot)
     link = links.show_links(bot)
     start_command = start.Start(bot)
-    suggestions_add = suggestions.SuggestionAdd(bot, suggestionsDB, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
+    suggestions_add = suggestions.SuggestionAdd(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
-    suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_main = suggestions.SuggestionMain(bot)
 
     # Composição das features no bot
