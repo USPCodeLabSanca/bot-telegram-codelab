@@ -33,7 +33,7 @@ class PoorUseOfCommand(TelebotError):
 class ServerError(TelebotError):
     def __init__(
         self,
-        error_text: str = "Não foi possível estabelecer conexão com o servidor!",
+        error_text: str = "Não foi possível estabelecer conexão com o servidor! ",
         error_tag:str = "<b>⚠️ ERRO:</b> ",
         edit_msg: Message = None,
         keyboard: InlineKeyboardMarkup = None,
@@ -45,7 +45,7 @@ class ServerError(TelebotError):
 class DBError(TelebotError):
     def __init__(
         self,
-        error_text="Não foi possível estabelecer conexão com a database!",
+        error_text="Não foi possível estabelecer conexão com a database! ",
         error_tag:str = "<b>⚠️ ERRO:</b> ",
         edit_msg: Message = None,
         keyboard: InlineKeyboardMarkup = None,
@@ -57,7 +57,7 @@ class DBError(TelebotError):
 class ExecutionError(TelebotError):
     def __init__(
         self,
-        error_text="Execução interrompida devido a um erro inesperado!",
+        error_text="Execução do comando interrompida devido a um erro inesperado! ",
         error_tag:str = "<b>⚠️ ERRO:</b> ",
         edit_msg: Message = None,
         keyboard: InlineKeyboardMarkup = None,

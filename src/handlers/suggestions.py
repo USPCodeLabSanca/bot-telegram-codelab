@@ -8,7 +8,6 @@ from utils.bot_errors import PoorUseOfCommand, ExecutionError
 from random import choice
 import json
 from datetime import datetime
-import requests
 import aiohttp
 
 class SuggestionMain(msg_handler):
@@ -55,7 +54,11 @@ class SuggestionAdd(msg_handler):
         self.session = session
 
         self.callbackquery_handler() # Aciona as callback_queries
-        self.state_handler() # Aciona o manejo de estados
+        
+        self.BOT.register_message_handler(
+            self.new_suggestion,
+            func=lambda msg: msg.from_user.id in self.user_states.keys()
+        )
 
     def cancel_btn(self, level: int):
         """Retorna um botão de cancelar para incluir nos keyboards"""
@@ -184,27 +187,21 @@ class SuggestionAdd(msg_handler):
             # Remove o usuário do dicionário de estados
             del self.user_states[call.from_user.id] 
 
-    def state_handler(self):
-        @self.BOT.message_handler(func=lambda msg: msg.from_user.id in self.user_states.keys())
-        async def handle_suggestion_input(msg: Message):
-            user_id = msg.from_user.id
-            state_info = self.user_states.get(user_id)
-
-            # Verifica qual o estado do usuário 
-            if not state_info or state_info["state"] != "awaiting_suggestion":
-                return 
-
-            type_of_issue = state_info["type"]
-            message_id_to_delete_inline_keyboard = state_info["message_id"]
-
-            # Remove o usuário do dicionário de estados
-            del self.user_states[user_id]
-
-            # Chama a função que processa a sugestão
-            await self.new_suggestion(msg, type_of_issue, message_id_to_delete_inline_keyboard)
-
     @catch_message_errors(PoorUseOfCommand)
-    async def new_suggestion(self, msg: Message, type_of_issue: str, message_id_to_delete_inline_keyboard: int):
+    async def new_suggestion(self, msg: Message):
+
+        user_id = msg.from_user.id
+        state_info = self.user_states.get(user_id)
+
+        # Verifica qual o estado do usuário 
+        if not state_info or state_info["state"] != "awaiting_suggestion":
+            return 
+
+        type_of_issue = state_info["type"]
+        message_id_to_delete_inline_keyboard = state_info["message_id"]
+
+        # Remove o usuário do dicionário de estados
+        del self.user_states[user_id]
 
         # Deleta o botão de cancelar da mensagem que pediu pela sugestão
         await self.BOT.edit_message_reply_markup(
@@ -394,10 +391,10 @@ class SuggestionList(msg_handler):
 
                 for index, small_list in enumerate(small_lists):
                     if small_list:
+
                         # Cabeçalho da mensagem
                         start_index = index * 5 + 1
                         end_index = index * 5 + len(small_list)
-
                         formatted =  f'<b>{plural.upper()}: [{start_index} a {end_index}]</b>\n\n' 
 
                         # Issues formatadas
@@ -490,8 +487,6 @@ class SuggestionList(msg_handler):
         return issues_by_category_broken_down
 
 
-
-
 class SuggestionHelper(msg_handler):
     def __init__(self, BOT, examples_json):
         """A classe SuggestionHelper envia um guia de como contribuir com uma sugestão da melhor maneira possível"""
@@ -519,17 +514,17 @@ class SuggestionHelper(msg_handler):
         guide2 += '      • <b>fix</b> - Descreve algum bug que acontece durante o uso do bot\n'
         guide2 += '      • <b>outro</b> - Descreve algum outro tipo de sugestão que não seja um bug para consertar ou uma funcionalidade nova\n\n'
 
-        guide2 += '   <b>-></b> Para redigir uma <b><i>feature</i></b>, recomenda-se incluir:\n'
+        guide2 += '   <b>-></b> Para redigir uma <b><i>Feature</i></b>, recomenda-se incluir:\n'
         guide2 += '      • Descrição da "lacuna" que a sua sugestão preencheria\n'
         guide2 += '      • Descrição da solução que a sua sugestão apresenta para tal "lacuna"\n\n'
 
-        guide2 += '   <b>-></b> Para redigir um <b><i>fix</i></b>, recomenda-se incluir:\n'
+        guide2 += '   <b>-></b> Para redigir um <b><i>Fix</i></b>, recomenda-se incluir:\n'
         guide2 += '      • Descrição do bug que está ocorrendo\n'
         guide2 += '      • Etapas de como outra pessoa poderia reproduzir o bug\n'
         guide2 += '      • Descrição do comportamento esperado, caso não existesse o bug\n'
         guide2 += '      • Caso você julgue pertinente, inclua contextos adicionais, como o seu sistema operacional, navegador, etc\n\n'
 
-        guide2 += '   <b>-></b> Para redigir um <b><i>outro</i></b>, recomenda-se incluir qualquer informação que você julgar pertinente\n'
+        guide2 += '   <b>-></b> Para redigir um <b><i>Outro</i></b>, recomenda-se incluir qualquer informação que você julgar pertinente\n'
 
         guide3 = '<b>3. Exemplos práticos:</b>\n'
         guide3 += '   <b>-></b> Consulte abaixo alguns exemplos disponíveis de sugestões\n'
@@ -636,9 +631,9 @@ class BuggedCommand(msg_handler):
     def callbackquery_handler(self):
 
         @self.BOT.callback_query_handler(func=lambda call: call.data.startswith('bug_2'))
-        @catch_callbackquery_errors(self.BOT)
+        @catch_callbackquery_errors(self.BOT, PoorUseOfCommand)
         async def error(call: CallbackQuery):
            
             await self.BOT.answer_callback_query(call.id, text= "⚠️ ERRO!!!")
 
-            raise ExecutionError(edit_msg=call.message)
+            raise PoorUseOfCommand(error_text= "Execução do comando interrompida devido a um erro inesperado!", edit_msg=call.message)
