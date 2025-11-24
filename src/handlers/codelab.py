@@ -1,11 +1,15 @@
-import telebot
-import random
 import json
+import random
+
+import telebot
 from telebot.types import Message
 
 from handlers.abstract import msg_handler
+from utils.isAdmin import admin_only
 
 # Handler para o comando /codelab
+
+
 class CodelabHandler(msg_handler):
     def __init__(self, bot, codelab_name_json):
         # Lendo os dados no json
@@ -13,8 +17,7 @@ class CodelabHandler(msg_handler):
             dados = json.load(file)
 
         # Criando a classe com a lista de nomes como dependência
-        super().__init__(bot, name_list=dados['codelab_name_list'])
-
+        super().__init__(bot, name_list=dados["codelab_name_list"])
 
     # Escolhe aleatóriamente um nome errado do grupo para enviar na resposta
     async def __call__(self, msg: Message):
@@ -25,8 +28,6 @@ class CodelabHandler(msg_handler):
             answer = "O meu grupo se chama " + name + "!"
 
         topic = msg.message_thread_id
-        print(msg.is_topic_message)
 
         # Chamando a injeção do método de envio da mensagem
         await self.BOT.send_message(msg.chat.id, answer, message_thread_id=topic)
-

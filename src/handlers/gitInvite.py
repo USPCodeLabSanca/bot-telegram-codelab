@@ -1,6 +1,5 @@
 import telebot
 from handlers.abstract import msg_handler
-from handlers.errors import catch_message_errors
 
 from github import Github
 
