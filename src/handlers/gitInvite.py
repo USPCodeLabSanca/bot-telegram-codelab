@@ -1,19 +1,36 @@
 import telebot
 from handlers.abstract import msg_handler
+from utils.errors import catch_message_errors
 
-from github import Github
+from utils.isAdmin import admin_only
+
+import aiohttp
 
 class git_invite(msg_handler):
-    def __init__(self,bot,git_token: str):
+    def __init__(self,bot,git_token: str, git_api: str, session: aiohttp.ClientSession):
         super().__init__(bot)
 
         self.git_token = git_token
-        self.github = Github(git_token)
-        self.organizacao = self.github.get_organization("USPCodeLabSanca")
-        self.register_callback_handler()
-        
-    @catch_message_errors() 
-    async def __call__(self,msg:telebot.types.Message):
-        invite = 'Escreva o e-mail da pessoa que deseja adicionar à organização:'
+        self.git_api = git_api
+        self.session = session
 
-        await self.BOT.send_message(msg.chat.id, invite, message_thread_id = msg.message_thread_id)
+    @catch_message_errors()    
+    @admin_only()
+    async def __call__(self,msg:telebot.types.Message):
+
+        email = msg.text.split("/gitInvite/", 1)[1]
+
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self.git_token}",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+        json_data = {
+            "email": email
+        }
+        response = await self.session.post(self.git_api, headers = headers, json = json_data)
+        data = await response.json()
+        response.close()
+        await self.BOT.send_message(msg.chat.id,"Membro Adicionado!",message_thread_id = msg.message_thread_id)
+

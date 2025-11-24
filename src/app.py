@@ -16,6 +16,7 @@ USER = os.getenv("USER")
 DB = os.getenv("DB")
 GIT_LINK_ISSUES = os.getenv("GIT_LINK_ISSUES")
 GIT_API_ISSUE_ENDPOINT = os.getenv("GIT_API_ISSUE_ENDPOINT")
+GIT_API_INVITE_ENDPOINT = os.getenv("GIT_API_INVITE_ENDPOINT")
 GIT_TOKEN = os.getenv("GIT_TOKEN")
 CODELAB_NAME_LIST = os.getenv("CODELAB_NAME_LIST")
 SUGGESTION_EXAMPLES = os.getenv("SUGGESTION_EXAMPLES")
@@ -40,7 +41,7 @@ async def create_bot(TOKEN, session):
     suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
     suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_main = suggestions.SuggestionMain(bot)
-    git_Invite = gitInvite.git_invite(bot, GIT_TOKEN)
+    git_Invite = gitInvite.git_invite(bot, GIT_TOKEN, GIT_API_INVITE_ENDPOINT, session)
 
     # Composição das features no bot
     bot.register_message_handler(bugged_command, commands=["bugged_command"])
@@ -54,7 +55,7 @@ async def create_bot(TOKEN, session):
     bot.register_message_handler(suggestions_add, commands=["suggestion_add"])
     bot.register_message_handler(suggestion_guide, commands=["suggestion_guide"])
     bot.register_message_handler(suggestions_list, commands=["suggestion_list"])
-    bot.register_message_handler(git_Invite, commands=['gitInvite'])
+    bot.register_message_handler(git_Invite, regexp=r"^/gitInvite/.+")
 
     # Configurando a lista de comandos do bot
     await bot.set_my_commands(setCommands.COMANDOS)
