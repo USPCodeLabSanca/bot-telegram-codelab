@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 import os
 
-from handlers import fronts, setCommands, codelab ,links, feedbacks, suggestions
+from handlers import fronts, setCommands, codelab ,links, feedbacks, suggestions, gitInvite
 from handlers.codelab import CodelabHandler
 from dependencies.internal import suggestions_db
 
@@ -41,6 +41,7 @@ async def create_bot(TOKEN, session):
     suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
     suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
     suggestion_main = suggestions.SuggestionMain(bot)
+    git_Invite = gitInvite.git_invite(bot, GIT_TOKEN)
 
     # Composição das features no bot
     bot.register_message_handler(bugged_command, commands=['bugged_command'])
@@ -52,6 +53,7 @@ async def create_bot(TOKEN, session):
     bot.register_message_handler(suggestions_add, commands=['suggestion_add'])
     bot.register_message_handler(suggestion_guide, commands=['suggestion_guide'])
     bot.register_message_handler(suggestions_list, commands=['suggestion_list'])
+    bot.register_message_handler(git_Invite, commands=['gitInvite'])
 
     # Configurando a lista de comandos do bot
     await bot.set_my_commands(setCommands.COMANDOS)

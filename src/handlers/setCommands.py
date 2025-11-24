@@ -8,7 +8,8 @@ COMANDOS = [
     BotCommand('/feedback', 'Coleta o feedback anônimo do usuário'),
     BotCommand('/fronts',  'Breve descrição das frentes do Codelab'),
     BotCommand('/links', 'Mostra links úteis do Codelab'),
-    BotCommand('/suggestion', 'Auxilia a construção de sugestões para o bot')
+    BotCommand('/suggestion', 'Auxilia a construção de sugestões para o bot'),
+    BotCommand('/gitInvite', 'Administradores conseguem adicionar pessoas à organização do GitHub')
 ]
 
 #AVISO: O PROGRAMA DEMORA UNS MINUTINHOS ANTES DE ATUALIZAR O MENU DE COMANDOS
