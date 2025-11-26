@@ -5,7 +5,7 @@ import aiohttp
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 
-from handlers import codelab, feedbacks, fronts, links, suggestions, start, help
+from handlers import codelab, fronts, links, suggestions, start, help, feedbacks
 from utils import setCommands
 
 # Constantes para instanciar o bot
@@ -31,7 +31,6 @@ async def create_bot(TOKEN, session):
     # Injetando as dependências nas features
     bugged_command = suggestions.BuggedCommand(bot)
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
-    feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
     front = fronts.ShowFronts(bot)
     help_command = help.Help(bot)
     link = links.show_links(bot)
@@ -41,10 +40,13 @@ async def create_bot(TOKEN, session):
     suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_main = suggestions.SuggestionMain(bot)
 
+    feedbacks_add = feedbacks.FeedbackAdd(bot, TARGET_CHAT_ID)
+    feedbacks_guide = feedbacks.FeedbackHelper(bot)
+    feedback_main = feedbacks.FeedbackMain(bot, feedback_add=feedbacks_add, feedback_guide=feedbacks_guide)
+
     # Composição das features no bot
     bot.register_message_handler(bugged_command, commands=["bugged_command"])
     bot.register_message_handler(codelab_comm, commands=["codelab"])
-    bot.register_message_handler(feedback, commands=["feedback"])
     bot.register_message_handler(front, commands=["fronts"])
     bot.register_message_handler(help_command, commands=["help"])
     bot.register_message_handler(link, commands=["links"])
@@ -53,6 +55,9 @@ async def create_bot(TOKEN, session):
     bot.register_message_handler(suggestions_add, commands=["suggestion_add"])
     bot.register_message_handler(suggestion_guide, commands=["suggestion_guide"])
     bot.register_message_handler(suggestions_list, commands=["suggestion_list"])
+    bot.register_message_handler(feedback_main, commands=["feedback"])
+    bot.register_message_handler(feedbacks_add, commands=["feedback_add"])
+    bot.register_message_handler(feedbacks_guide, commands=["feedback_guide"])
 
     # Configurando a lista de comandos do bot
     await bot.set_my_commands(setCommands.COMANDOS)
