@@ -101,11 +101,11 @@ class FeedbackAdd(msg_handler):
 
         # Menu para selecionar o tipo de feedback (Com formatação HTML)
         menu_feedback = (
-            "• <b>Sugestão</b> ✨: Ideias para melhorar o bot ou adicionar novas funcionalidades.\n\n"
+            "• <b>Sugestão</b> ✨: Ideias para melhorar o grupo.\n\n"
             
-            "• <b>Reclamação</b> 🐞: Problemas ou falhas que você encontrou ao usar o bot.\n\n"
+            "• <b>Reclamação</b> 🐞: Algum aspecto negativo sobre sua experiência com o grupo, alguma reclamação ou reportar qualquer atitude ofensiva que você tenha sido vítima.\n\n"
             
-            "• <b>Elogio</b> 🥳: Comentários positivos sobre o bot ou suas funcionalidades."
+            "• <b>Elogio</b> 🥳: Comentários positivos sobre o grupo ou aspectos que você já gosta e quer enfatizar que acha bacana que continuem."
         )
 
         menu = f"{menu_abertura}\n\n{menu_feedback}"
@@ -277,7 +277,7 @@ class FeedbackHelper(msg_handler):
             
             "🚫 Evite linguagem ofensiva ou ataques pessoais.\n\n"
             
-            "⭐ <i>Obrigado por ajudar a melhorar nosso bot!</i>"
+            "⭐ <i>Obrigado por ajudar a melhorar nosso grupo Extracurricular!</i>"
         )
 
         await self.BOT.send_message(
