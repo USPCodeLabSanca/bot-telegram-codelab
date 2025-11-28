@@ -1,15 +1,13 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReactionTypeEmoji, Message, CallbackQuery
 
 from handlers.abstract import msg_handler
-from handlers.errors import catch_callbackquery_errors, catch_message_errors
+from utils.errors import catch_callbackquery_errors, catch_message_errors
 
-from dependencies.internal.suggestions_db import SuggestionsDB
-from dependencies.internal.bot_errors import DBError, PoorUseOfCommand, ExecutionError
+from utils.bot_errors import PoorUseOfCommand, ExecutionError
 
 from random import choice
 import json
 from datetime import datetime
-import requests
 import aiohttp
 
 class SuggestionMain(msg_handler):
@@ -42,24 +40,26 @@ class SuggestionMain(msg_handler):
 
 
 class SuggestionAdd(msg_handler):
-    def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str, git_api: str, git_token: str, session: aiohttp.ClientSession ):
+    def __init__(self, BOT, git_link: str, git_api: str, git_token: str, session: aiohttp.ClientSession ):
         """A classe SuggestionAdd recebe a sugestão com qual o usuário deseja contribuir.
         Primeiro é decidido qual tipo de sugestão será adicionada, depois faz-se a validação
         e a confirmação. A manutenção do banco de dados também é feita aqui"""
 
         super().__init__(BOT)
 
-        self.DB = suggestion_db # A clase do banco de dados de sugestões
         self.git_link = git_link # O link para as issues do BOT_A_SER_NOMEADO no github do Codelab
         self.user_states = {} # Dicionário que guarda os estados de usuários
-        self.git_api = git_api
-        self.git_token = git_token
-        self.session = session
+        self.git_api = git_api # Endpoint da api de adicionar issues
+        self.git_token = git_token # Token para poder usar a api do git
+        self.session = session # Sessão para fazer requests
 
         self.callbackquery_handler() # Aciona as callback_queries
-        self.state_handler() # Aciona o manejo de estados
-
-
+        
+        # Adicionando um "handler" para ler as sugestões desde que o usuário esteja no dicionário de estados
+        self.BOT.register_message_handler(
+            self.new_suggestion,
+            func=lambda msg: msg.from_user.id in self.user_states.keys()
+        )
 
     def cancel_btn(self, level: int):
         """Retorna um botão de cancelar para incluir nos keyboards"""
@@ -88,7 +88,6 @@ class SuggestionAdd(msg_handler):
             parse_mode='HTML',
             message_thread_id = msg.message_thread_id)
 
-        await self.DB.maintenance_db()
 
     def callbackquery_handler(self):
 
@@ -145,26 +144,20 @@ class SuggestionAdd(msg_handler):
 
         # BOTÃO DE CONFIRMAR OU CANCELAR
         @self.BOT.callback_query_handler(func= lambda call: call.data.startswith('suggestion_confirm'))
-        @catch_callbackquery_errors(self.BOT, DBError)
+        @catch_callbackquery_errors(self.BOT, ExecutionError)
         async def confirm_add(call: CallbackQuery):
 
             user_id = call.from_user.id
 
             # Verifica se o usuário está aguardando confirmação
             if (user_id not in self.user_states.keys() and self.user_states[user_id]['state'] != "awaiting_confirmation"):
-                raise DBError()
+                raise ExecutionError()
             
             state_info = self.user_states.get(user_id)
 
             type_of_issue = state_info["suggestion_category"]
             suggestion_title = state_info["suggestion_title"]
             suggestion_body= state_info["suggestion_body"] 
-
-            # Adiciona ao banco de dados
-            result_db = await self.DB.add_db(type_of_issue, suggestion_title, suggestion_body)
-
-            if not result_db.success:
-                raise DBError()
 
             # Adiciona ao git
             result_git = await self.add_to_git(type_of_issue, suggestion_title, suggestion_body)
@@ -195,27 +188,21 @@ class SuggestionAdd(msg_handler):
             # Remove o usuário do dicionário de estados
             del self.user_states[call.from_user.id] 
 
-    def state_handler(self):
-        @self.BOT.message_handler(func=lambda msg: msg.from_user.id in self.user_states.keys())
-        async def handle_suggestion_input(msg: Message):
-            user_id = msg.from_user.id
-            state_info = self.user_states.get(user_id)
-
-            # Verifica qual o estado do usuário 
-            if not state_info or state_info["state"] != "awaiting_suggestion":
-                return 
-
-            type_of_issue = state_info["type"]
-            message_id_to_delete_inline_keyboard = state_info["message_id"]
-
-            # Remove o usuário do dicionário de estados
-            del self.user_states[user_id]
-
-            # Chama a função que processa a sugestão
-            await self.new_suggestion(msg, type_of_issue, message_id_to_delete_inline_keyboard)
-
     @catch_message_errors(PoorUseOfCommand)
-    async def new_suggestion(self, msg: Message, type_of_issue: str, message_id_to_delete_inline_keyboard: int):
+    async def new_suggestion(self, msg: Message):
+
+        user_id = msg.from_user.id
+        state_info = self.user_states.get(user_id)
+
+        # Verifica qual o estado do usuário 
+        if not state_info or state_info["state"] != "awaiting_suggestion":
+            return 
+
+        type_of_issue = state_info["type"]
+        message_id_to_delete_inline_keyboard = state_info["message_id"]
+
+        # Remove o usuário do dicionário de estados
+        del self.user_states[user_id]
 
         # Deleta o botão de cancelar da mensagem que pediu pela sugestão
         await self.BOT.edit_message_reply_markup(
@@ -274,20 +261,19 @@ class SuggestionAdd(msg_handler):
         )
 
     async def add_to_git(self, type_of_issue: str, title: str, body: str):
-        
-        #Adiciona a issue ao github do codelab
+        """Adiciona a issue ao github do bot do codelab"""
 
         # Valida a categoria
         if type_of_issue == "feature":
-            label = ["idea", "enhancement"]
+            label = ["enhancement"]
             type = type_of_issue
 
         elif type_of_issue == "fix":
-            label = ["bug", "Change"]
+            label = ["bug"]
             type = "bug"
 
         elif type_of_issue == "outro":
-            label = []
+            label = ["idea"]
             type = None
             
         else:
@@ -311,12 +297,15 @@ class SuggestionAdd(msg_handler):
      
 
 class SuggestionList(msg_handler):
-    def __init__(self, BOT, suggestion_db: SuggestionsDB, git_link: str):
+    def __init__(self, BOT, git_link: str, git_api: str, git_token: str, session: aiohttp.ClientSession):
         """A classe SuggestionList envia uma lista de issues em aberto para o usuário"""
+
         super().__init__(BOT)
 
-        self.DB = suggestion_db # A clase do banco de dados de sugestões
         self.git_link = git_link # O link para as issues do BOT_A_SER_NOMEADO no github do Codelab
+        self.git_api = git_api
+        self.git_token = git_token
+        self.session = session
 
         self.callbackquery_handler() # Aciona as callback_queries
 
@@ -362,7 +351,7 @@ class SuggestionList(msg_handler):
 
         # BOTÃO DE QUAL CATEGORIA ENVIAR
         @self.BOT.callback_query_handler(func=lambda call: call.data.startswith('suggestion_list'))
-        @catch_callbackquery_errors(self.BOT, DBError)
+        @catch_callbackquery_errors(self.BOT)
         async def what_to_send(call: CallbackQuery):
             
             # Encontra a categoria de issues que será buscada na database
@@ -374,16 +363,11 @@ class SuggestionList(msg_handler):
             if type_of_issue not in ['all', 'feature', 'fix', 'outro']:
                 raise ValueError('Categoria de sugestão inválida!')
             
-            type_of_issue_list = ["feature", "fix", "outro"] if type_of_issue == "all" else [type_of_issue]
-            
-            # Busca no banco de dados
-            result = await self.DB.get_all_suggestions() if type_of_issue == "all" else await self.DB.get_specific_suggestions(type_of_issue)
-
-            if not result.success:
-                raise DBError()
+            # Busca no git
+            result = await self.get_from_git(type_of_issue)
             
             # Caso a database estiver vazia
-            if result.data == None:
+            if result== None:
                 hyperlink_to_git = f'<a href="{self.git_link}">github</a>'
 
                 await self.BOT.edit_message_text(
@@ -399,33 +383,31 @@ class SuggestionList(msg_handler):
             await self.BOT.delete_message(
                 chat_id=call.message.chat.id,
                 message_id=call.message.id
-            )
-                
-            suggestions_dict = {category: [] for category in type_of_issue_list}
-            
-            for category in type_of_issue_list:
-                # Quebra as listas grandes de sugestões em listas menores de até 5 itens
-                smaller_lists = [result.data[category][i:i + 5] for i in range(0, len(result.data[category]), 5)]
-                suggestions_dict[category] = smaller_lists if smaller_lists else [[]]              
+            )       
 
-            for category, small_lists in suggestions_dict.items():
+            for category, small_lists in result.items():
                 
                 # Define o plural da categoria escolhida
-                plural = f'{category}s' if category in ('feature', 'outro') else f'{category}es'
+                plural = f'{category}s' if category in ('Feature', 'Outro') else f'{category}es'
 
                 for index, small_list in enumerate(small_lists):
                     if small_list:
+
                         # Cabeçalho da mensagem
-                        formatted =  f'<b>{plural.upper()}: [{index * 5 + 1} a {index * 5 + len(small_list)}]</b>\n\n' 
+                        start_index = index * 5 + 1
+                        end_index = index * 5 + len(small_list)
+                        formatted =  f'<b>{plural.upper()}: [{start_index} a {end_index}]</b>\n\n' 
 
                         # Issues formatadas
-                        formatted += ''.join(f'    <b>-></b> <i>{title}:</i> {body}\n\n' for title, body in small_list)
+                        for num, (title, body) in enumerate(small_list):
+                            formatted += f'<b>{num + start_index}) {title}</b>:\n{body}\n\n'
 
                         await self.BOT.send_message(
                             chat_id=call.message.chat.id,
                             text=formatted,
                             parse_mode='HTML',
-                            message_thread_id=call.message.message_thread_id
+                            message_thread_id=call.message.message_thread_id,
+                            disable_web_page_preview=True
                         )
 
                     else:
@@ -449,6 +431,61 @@ class SuggestionList(msg_handler):
                 disable_web_page_preview=True,
                 message_thread_id=call.message.message_thread_id
             )
+
+    async def get_from_git(self, type_of_issue: str):
+        type_of_issue_list = ["Feature", "Fix", "Outro"] if type_of_issue == "all" else [type_of_issue.capitalize()]
+
+         # Valida a categoria
+        if type_of_issue == "all":
+            type = "*"
+
+        elif type_of_issue == "feature":
+            type = "Feature"
+
+        elif type_of_issue == "fix":
+            type = "Bug"
+
+        elif type_of_issue == "outro":
+            type = "none"
+            
+        else:
+            raise ValueError('Categoria de sugestão inválida!')
+
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self.git_token}",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+
+        json = {"type": type}
+
+        response = await self.session.get(self.git_api, headers=headers, json=json)
+        response.raise_for_status()
+        response_json = await response.json()
+
+        issues_by_category = {category: [] for category in type_of_issue_list}
+        
+        for issue in response_json:
+            title = issue["title"]
+
+            title_with_url =  f'<a href="{issue["html_url"]}">{title}</a>'  
+            body = issue["body"]
+
+            category = title.split(":", 1)[0]
+
+            if category in type_of_issue_list:
+                issues_by_category[category].append((title_with_url, body))
+
+            elif "Outro" in type_of_issue_list and category not in ('Feature', 'Fix'):
+                issues_by_category["Outro"].append((title_with_url, body))
+
+        issues_by_category_broken_down = {category: [] for category in type_of_issue_list}
+
+        for category in type_of_issue_list:
+            smaller_lists = [issues_by_category[category][i:i + 5] for i in range(0, len(issues_by_category[category]), 5)]
+            issues_by_category_broken_down[category] = smaller_lists if smaller_lists else [[]]
+
+        return issues_by_category_broken_down
 
 
 class SuggestionHelper(msg_handler):
@@ -478,17 +515,17 @@ class SuggestionHelper(msg_handler):
         guide2 += '      • <b>fix</b> - Descreve algum bug que acontece durante o uso do bot\n'
         guide2 += '      • <b>outro</b> - Descreve algum outro tipo de sugestão que não seja um bug para consertar ou uma funcionalidade nova\n\n'
 
-        guide2 += '   <b>-></b> Para redigir uma <b><i>feature</i></b>, recomenda-se incluir:\n'
+        guide2 += '   <b>-></b> Para redigir uma <b><i>Feature</i></b>, recomenda-se incluir:\n'
         guide2 += '      • Descrição da "lacuna" que a sua sugestão preencheria\n'
         guide2 += '      • Descrição da solução que a sua sugestão apresenta para tal "lacuna"\n\n'
 
-        guide2 += '   <b>-></b> Para redigir um <b><i>fix</i></b>, recomenda-se incluir:\n'
+        guide2 += '   <b>-></b> Para redigir um <b><i>Fix</i></b>, recomenda-se incluir:\n'
         guide2 += '      • Descrição do bug que está ocorrendo\n'
         guide2 += '      • Etapas de como outra pessoa poderia reproduzir o bug\n'
         guide2 += '      • Descrição do comportamento esperado, caso não existesse o bug\n'
         guide2 += '      • Caso você julgue pertinente, inclua contextos adicionais, como o seu sistema operacional, navegador, etc\n\n'
 
-        guide2 += '   <b>-></b> Para redigir um <b><i>outro</i></b>, recomenda-se incluir qualquer informação que você julgar pertinente\n'
+        guide2 += '   <b>-></b> Para redigir um <b><i>Outro</i></b>, recomenda-se incluir qualquer informação que você julgar pertinente\n'
 
         guide3 = '<b>3. Exemplos práticos:</b>\n'
         guide3 += '   <b>-></b> Consulte abaixo alguns exemplos disponíveis de sugestões\n'
@@ -595,9 +632,9 @@ class BuggedCommand(msg_handler):
     def callbackquery_handler(self):
 
         @self.BOT.callback_query_handler(func=lambda call: call.data.startswith('bug_2'))
-        @catch_callbackquery_errors(self.BOT)
+        @catch_callbackquery_errors(self.BOT, PoorUseOfCommand)
         async def error(call: CallbackQuery):
            
             await self.BOT.answer_callback_query(call.id, text= "⚠️ ERRO!!!")
 
-            raise ExecutionError(edit_msg=call.message)
+            raise PoorUseOfCommand(error_text= "Execução do comando interrompida devido a um erro inesperado!", edit_msg=call.message)

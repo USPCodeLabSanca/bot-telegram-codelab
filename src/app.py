@@ -5,8 +5,7 @@ import aiohttp
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
 
-from dependencies.internal import suggestions_db
-from handlers import codelab, feedbacks, fronts, links, suggestions
+from handlers import codelab, feedbacks, fronts, links, suggestions, start, help
 from utils import setCommands
 
 # Constantes para instanciar o bot
@@ -29,20 +28,17 @@ async def create_bot(TOKEN, session):
     # instanciando o bot
     bot = AsyncTeleBot(TOKEN)
 
-    # Instanciando as dependências dos bots
-    suggestionsDB = await suggestions_db.SuggestionsDB.create(database_path=DB)
-
     # Injetando as dependências nas features
     bugged_command = suggestions.BuggedCommand(bot)
     codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
     feedback = feedbacks.Feedback(bot, TARGET_CHAT_ID)
     front = fronts.ShowFronts(bot)
+    help_command = help.Help(bot)
     link = links.show_links(bot)
-    suggestions_add = suggestions.SuggestionAdd(
-        bot, suggestionsDB, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session
-    )
+    start_command = start.Start(bot)
+    suggestions_add = suggestions.SuggestionAdd(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
-    suggestions_list = suggestions.SuggestionList(bot, suggestionsDB, GIT_LINK_ISSUES)
+    suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_main = suggestions.SuggestionMain(bot)
 
     # Composição das features no bot
@@ -50,7 +46,9 @@ async def create_bot(TOKEN, session):
     bot.register_message_handler(codelab_comm, commands=["codelab"])
     bot.register_message_handler(feedback, commands=["feedback"])
     bot.register_message_handler(front, commands=["fronts"])
+    bot.register_message_handler(help_command, commands=["help"])
     bot.register_message_handler(link, commands=["links"])
+    bot.register_message_handler(start_command, commands=["start"])
     bot.register_message_handler(suggestion_main, commands=["suggestion"])
     bot.register_message_handler(suggestions_add, commands=["suggestion_add"])
     bot.register_message_handler(suggestion_guide, commands=["suggestion_guide"])

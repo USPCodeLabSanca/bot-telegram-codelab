@@ -3,7 +3,8 @@ from telebot.types import BotCommand
 
 # Coloque aqui o comando que você adicionou e uma breve descrição dele
 COMANDOS = [
-    BotCommand("/start", "Inicia o robô"),
+    BotCommand("/start", "Inicia o bot"),
+    BotCommand("/help", "Lista de comandos do bot"),
     BotCommand("/codelab", "Mostra o nome correto do grupo"),
     BotCommand("/feedback", "Coleta o feedback anônimo do usuário"),
     BotCommand("/fronts", "Breve descrição das frentes do Codelab"),
@@ -11,4 +12,4 @@ COMANDOS = [
     BotCommand("/suggestion", "Auxilia a construção de sugestões para o bot"),
 ]
 
-# AVISO: O PROGRAMA DEMORA UNS MINUTINHOS ANTES DE ATUALIZAR O MENU DE COMANDOS
+# AVISO: O PROGRAMA PODE DEMORAR UNS MINUTINHOS ANTES DE ATUALIZAR O MENU DE COMANDOS
