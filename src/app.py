@@ -13,7 +13,6 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 USER = os.getenv("USER")
-DB = os.getenv("DB")
 GIT_LINK_ISSUES = os.getenv("GIT_LINK_ISSUES")
 GIT_API_ISSUE_ENDPOINT = os.getenv("GIT_API_ISSUE_ENDPOINT")
 GIT_TOKEN = os.getenv("GIT_TOKEN")
@@ -37,7 +36,7 @@ async def create_bot(TOKEN, session):
     link = links.show_links(bot)
     start_command = start.Start(bot)
     suggestions_add = suggestions.SuggestionAdd(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
-    suggestion_guide = suggestions.SuggestionHelper(bot, SUGGESTION_EXAMPLES)
+    suggestion_guide = suggestions.SuggestionGuide(bot, SUGGESTION_EXAMPLES)
     suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
     suggestion_main = suggestions.SuggestionMain(bot)
 

@@ -1,0 +1,248 @@
+# Manual de Handlers
+
+## Introdução
+Este documento serve como a referência central para todos os message_handlers do Bot. O objetivo é mapear, de forma padronizada, como o Bot reage a interações do usuário, detalhando a lógica de entrada (comandos), processamento (fluxos e estados) e saída (respostas).
+
+A documentação está organizada por Módulos (arquivo.py), refletindo a estrutura do código-fonte (`./src`). Cada seção detalha uma classe de handler, expondo suas dependências técnicas e caminho de comunicação ideal de um usuário
+
+## Legenda e Atributos
+Para garantir uma leitura rápida das capacidades de cada comando, os seguintes ícones e definições foram utilizados no cabeçalho de cada classe:
+
+- ⚙️ Comando: O gatilho textual que inicia o handler (ex: /start, /help).
+- 📋 Menu de Comandos: Indica (Sim/Não) se o comando está visível no botão "Menu" da interface do Telegram.
+- 📝 Documentado no /help: Indica (Sim/Não) se o comando está presente no comando de ajuda interno.
+- 🔎 Escopo: Define onde o comando pode ser executado:
+    - All: Funciona em qualquer chat (Privado e Grupos).
+    - Privado: Funciona restritamente em conversas diretas com o bot (DM).
+    - Grupo: Funciona restritamente em grupos/supergrupos/canais.
+- 🗝️ Permissão: Define o nível de acesso necessário:
+    - Qualquer Usuário: Aberto ao público geral.
+    - Admin: Restrito a administradores do grupo.
+
+## Sumário
+* [Introdução e Legenda](#Introdução)
+* [Módulo: help.py](#módulo-helppy)
+    * [Help](#1-help)
+* [Módulo: start.py](#módulo-startpy)
+    * [Start](#1-start)
+* [Módulo: suggestions.py](#módulo-suggestionspy)
+    * [SuggestionMain](#1-suggestionmain)
+    * [SuggestionAdd](#2-suggestionadd)
+    * [SuggestionList](#3-suggestionlist)
+    * [SuggestionGuide](#4-suggestionguide)
+    * [BuggedCommand](#5-buggedcommand)
+
+## Módulo: help.py
+
+### 1. Help
+- #### Atributos
+    - ⚙️ Comando: `/help`.
+    - 📋 Presente no menu de comandos: Sim.
+    - 📝 Documentado no /help: Sim.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler Help é a principal documentação interna para expor as funcionalidades do Bot aos usuários.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/help`. O bot envia um resumo dos principais comandos e as suas ações.
+
+- #### Inicialização e dependências
+    ```
+        help_command = help.Help(bot)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: start.py
+
+### 1. Start
+- #### Atributos
+    - ⚙️ Comando: `/start`.
+    - 📋 Presente no menu de comandos: Sim.
+    - 📝 Documentado no /help: Sim.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler Start é a primeira interação que um usuário faz com o Bot. Ele cumprimenta o usuário e o direciona para o comando `/help`, para que se informe melhor sobre as utilidades do Bot.
+
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/start`. O bot se apresenta, e envia um atalho para conhecer melhor a atuação do bot (`/help`).            
+
+- #### Inicialização e dependências
+    ```
+        start_command = start.Start(bot)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: suggestions.py
+
+### 1. SuggestionMain
+- #### Atributos
+    - ⚙️ Comando: `/suggestion`.
+    - 📋 Presente no menu de comandos: Sim.
+    - 📝 Documentado no /help: Não.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler SuggestionMain atua como um guia do sistema de sugestões. Ele envia um menu que direciona o usuário para as ações de adicionar ou de visualizar sugestões, ou então de receber dicas de contribuição.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/suggestion`. O Bot envia um menu informativo contendo:
+        - Atalho para adicionar sugestão (`/suggestion_add`).
+        - Atalho para listar sugestões (`/suggestion_list`).
+        - Recomendação de leitura do guia (`/suggestion_guide`).
+
+- #### Inicialização e dependências
+     ``` 
+        suggestion_main = suggestions.SuggestionMain(bot)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+### 2. SuggestionAdd
+- #### Atributos
+    - ⚙️ Comando: `/suggestion_add`
+    - 📋 Presente no menu de comandos: Não
+    - 📝 Documentado no /help: Sim
+    - 🔎 Escopo: All
+    - 🗝️ Permissão: Qualquer Usuário
+
+- #### Função
+    - O handler SuggestionAdd coleta a categoria da issue a ser adicionada, recebe o texto do usuário, valida, formata e então publica a nova sugestão no repositório do bot.
+
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/suggestion_add`. O Bot apresenta os botões de categoria `FEATURE`, `FIX`, `OUTRO`.
+
+    2. **Seleção**: Usuário clica na categoria desejada.
+
+    3. **Submissão de sugestão**: Usuário envia o texto da sugestão.
+        - *Validação:* O texto deve conter `:` separando título e corpo e ter no máximo 600 caracteres, caso contrário, o usuário é alertado do erro cometido e o fluxo é encerrado.
+
+    4. **Confirmação:** O Bot exibe uma prévia formatada. Se o usuário confirmar, o Bot envia para o GitHub e notifica o usuário do sucesso.
+
+- #### Inicialização e dependências
+    ```
+        suggestions_add = suggestions.SuggestionAdd(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
+    ``` 
+    
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `GIT_LINK_ISSUES`        | Url das issues abertas no repositório |
+    | `GIT_API_ISSUE_ENDPOINT` | Endpoint da API do Github de manipular issues |
+    | `GIT_TOKEN`              | Token de autenticação da API do GitHub |
+    | `session`                | Sessão `aiohttp.ClientSession` para requisições assíncronas |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+### 3. SuggestionList
+- #### Atributos
+    - ⚙️ Comando: `/suggestion_list`.
+    - 📋 Presente no menu de comandos: Não.
+    - 📝 Documentado no /help: Sim.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler SuggestionList conecta-se à API do GitHub para recuperar e listar as issues abertas, permitindo que o usuário visualize o backlog atual do projeto diretamente pelo Telegram.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/suggestion_list`. O Bot apresenta os botões de categoria `TODOS`, `FEATURE`, `FIX`, `OUTRO`.
+
+    2. **Seleção**: Usuário clica na categoria desejada. O Bot envia uma mensagem listando todas as issues na opção escolhida (paginando de 5 em 5 por mensagem), ou informa que não há issues em aberto na categoria informada.
+
+- #### Inicialização e dependências
+    ```
+        suggestions_list = suggestions.SuggestionList(bot, GIT_LINK_ISSUES, GIT_API_ISSUE_ENDPOINT, GIT_TOKEN, session)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `GIT_LINK_ISSUES`        | Url das issues abertas no repositório |
+    | `GIT_API_ISSUE_ENDPOINT` | Endpoint da API do Github de manipular issues |
+    | `GIT_TOKEN`              | Token de autenticação da API do GitHub |
+    | `session`                | Sessão `aiohttp.ClientSession` para requisições assíncronas. |
+
+(mesmas do SuggestionAdd)
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+
+### 4. SuggestionGuide
+- #### Atributos
+    - ⚙️ Comando: `/suggestion_guide`.
+    - 📋 Presente no menu de comandos: Não.
+    - 📝 Documentado no /help: Sim.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler SuggestionGuide fornece instruções para o usuário, explicando as melhores práticas para escrever uma issue clara e útil.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/suggestion_guide`. O Bot envia 3 mensagens sequenciais contendo regras, instruções e dicas.
+
+    2. **Exemplos interativos (opcional):** A última mensagem contém botões `Exemplo Feature`, `Exemplo Fix`, `Èxemplo Outro`. Ao clicar, o Bot sorteia e exibe um exemplo real extraído do arquivo JSON de exemplos.
+
+- #### Inicialização e dependências
+    ```
+        suggestion_guide = suggestions.SuggestionGuide(bot, SUGGESTION_EXAMPLES)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `SUGGESTION_EXAMPLES`    | Caminho (str) para o arquivo JSON com exemplos de issues divididas por categoria|
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+### 5. BuggedCommand
+- #### Atributos
+    - ⚙️ Comando: `/bugged_command`.
+    - 📋 Presente no menu de comandos: Não.
+    - 📝 Documentado no /help: Não.
+    - 🔎 Escopo: All.
+    - 🗝️ Permissão: Qualquer Usuário.
+
+- #### Função
+    - O handler BuggedCommand é intencionalmente defeituoso. Serve para ilustrar os exemplos de issue de bug do SuggestionGuide.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário envia `/bugged_command`
+    2. **Comportamentos (bugs simulados):**
+        *   *Quintas-feiras:* O comando é ignorado quando usado nas quintas-feiras.
+        *   *Duplicação:* Envia a mensagem "😃 Eu sou um bug!" duas vezes.
+        *   *Botões defeituosos:* O botão "bug 1" não faz nada e o botão "bug 2" dispara uma exceção `PoorUseOfCommand` proposital.
+
+- #### Inicialização e dependências
+    ```
+        bugged_command = suggestions.BuggedCommand(bot)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+

@@ -74,8 +74,8 @@ class SuggestionAdd(msg_handler):
         menu += '✨ Sugerir uma nova funcionalidade para o bot: FEATURE \n\n'
         menu += '🤖 Outro tipo de sugestão/comentário: OUTRO \n\n'
 
-        btn1 = InlineKeyboardButton(text='🐞 FIX', callback_data= 'suggestion_add_fix')
-        btn2 = InlineKeyboardButton(text='🌟 FEATURE', callback_data= 'suggestion_add_feature')
+        btn1 = InlineKeyboardButton(text='🌟 FEATURE', callback_data= 'suggestion_add_feature')
+        btn2 = InlineKeyboardButton(text='🐞 FIX', callback_data= 'suggestion_add_fix')
         btn3 = InlineKeyboardButton(text='💬 OUTRO', callback_data= 'suggestion_add_outro')
 
         keyboard = InlineKeyboardMarkup(row_width=1)
@@ -320,8 +320,8 @@ class SuggestionList(msg_handler):
 
         menu = '<b>Quais issues em aberto você quer ver?</b>\n\n'
         btn1 = InlineKeyboardButton(text='📄 TODOS', callback_data= 'suggestion_list_all')
-        btn2 = InlineKeyboardButton(text='🐛 FIX', callback_data= 'suggestion_list_fix')
-        btn3 = InlineKeyboardButton(text='✨ FEATURE', callback_data= 'suggestion_list_feature')
+        btn2 = InlineKeyboardButton(text='✨ FEATURE', callback_data= 'suggestion_list_feature')
+        btn3 = InlineKeyboardButton(text='🐛 FIX', callback_data= 'suggestion_list_fix')
         btn4 = InlineKeyboardButton(text='🤖 OUTRO', callback_data= 'suggestion_list_outro')
 
         keyboard = InlineKeyboardMarkup(row_width=1)
@@ -488,9 +488,9 @@ class SuggestionList(msg_handler):
         return issues_by_category_broken_down
 
 
-class SuggestionHelper(msg_handler):
+class SuggestionGuide(msg_handler):
     def __init__(self, BOT, examples_json):
-        """A classe SuggestionHelper envia um guia de como contribuir com uma sugestão da melhor maneira possível"""
+        """A classe SuggestionGuide envia um guia de como contribuir com uma sugestão da melhor maneira possível"""
         super().__init__(BOT)
         
         with open(examples_json, "r", encoding="utf-8") as file:
@@ -591,7 +591,7 @@ class SuggestionHelper(msg_handler):
 
 class BuggedCommand(msg_handler):
     def __init__(self, BOT):
-        """A classe BuggedCommand é um exemplo de comando mal funcional para ilustrar o SuggestionHelper"""
+        """A classe BuggedCommand é um exemplo de comando mal funcional para ilustrar o SuggestionGuide"""
         
         super().__init__(BOT)
         self.callbackquery_handler()
