@@ -8,16 +8,19 @@ A documentação está organizada por Módulos (arquivo.py), refletindo a estrut
 ## Legenda e Atributos
 Para garantir uma leitura rápida das capacidades de cada comando, os seguintes ícones e definições foram utilizados no cabeçalho de cada classe:
 
-- ⚙️ Comando: O gatilho textual que inicia o handler (ex: /start, /help).
-- 📋 Menu de Comandos: Indica (Sim/Não) se o comando está visível no botão "Menu" da interface do Telegram.
-- 📝 Documentado no /help: Indica (Sim/Não) se o comando está presente no comando de ajuda interno.
-- 🔎 Escopo: Define onde o comando pode ser executado:
-    - All: Funciona em qualquer chat (Privado e Grupos).
-    - Privado: Funciona restritamente em conversas diretas com o bot (DM).
-    - Grupo: Funciona restritamente em grupos/supergrupos/canais.
-- 🗝️ Permissão: Define o nível de acesso necessário:
-    - Qualquer Usuário: Aberto ao público geral.
-    - Admin: Restrito a administradores do grupo.
+- ⚙️ **Comando:** O gatilho textual que inicia o handler (ex: /start, /help).
+
+- 📋 **Menu de Comandos:** Indica (Sim/Não) se o comando está visível no botão "Menu" da interface do Telegram.
+
+- 📝 **/help:** Indica (Sim/Não) se o comando está presente no comando de ajuda interno.
+
+- 🔎 **Escopo:** Define onde o comando pode ser executado:
+    - *All:* Funciona em qualquer chat (Privado e Grupos).
+    - *Privado:* Funciona restritamente em conversas diretas com o bot (DM).
+    - *Grupo:* Funciona restritamente em grupos/supergrupos/canais.
+- 🗝️ **Permissão:** Define o nível de acesso necessário:
+    - *Qualquer Usuário:* Aberto ao público geral.
+    - *Admin:* Restrito a administradores do grupo.
 
 ## Sumário
 * [Introdução e Legenda](#Introdução)
@@ -36,11 +39,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 1. Help
 - #### Atributos
-    - ⚙️ Comando: `/help`.
-    - 📋 Presente no menu de comandos: Sim.
-    - 📝 Documentado no /help: Sim.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/help`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler Help é a principal documentação interna para expor as funcionalidades do Bot aos usuários.
@@ -63,11 +66,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 1. Start
 - #### Atributos
-    - ⚙️ Comando: `/start`.
-    - 📋 Presente no menu de comandos: Sim.
-    - 📝 Documentado no /help: Sim.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/start`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler Start é a primeira interação que um usuário faz com o Bot. Ele cumprimenta o usuário e o direciona para o comando `/help`, para que se informe melhor sobre as utilidades do Bot.
@@ -91,11 +94,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 1. SuggestionMain
 - #### Atributos
-    - ⚙️ Comando: `/suggestion`.
-    - 📋 Presente no menu de comandos: Sim.
-    - 📝 Documentado no /help: Não.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/suggestion`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Não.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler SuggestionMain atua como um guia do sistema de sugestões. Ele envia um menu que direciona o usuário para as ações de adicionar ou de visualizar sugestões, ou então de receber dicas de contribuição.
@@ -119,11 +122,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 2. SuggestionAdd
 - #### Atributos
-    - ⚙️ Comando: `/suggestion_add`
-    - 📋 Presente no menu de comandos: Não
-    - 📝 Documentado no /help: Sim
-    - 🔎 Escopo: All
-    - 🗝️ Permissão: Qualquer Usuário
+    - ⚙️ **Comando:** `/suggestion_add`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler SuggestionAdd coleta a categoria da issue a ser adicionada, recebe o texto do usuário, valida, formata e então publica a nova sugestão no repositório do bot.
@@ -156,11 +159,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 3. SuggestionList
 - #### Atributos
-    - ⚙️ Comando: `/suggestion_list`.
-    - 📋 Presente no menu de comandos: Não.
-    - 📝 Documentado no /help: Sim.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/suggestion_list`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler SuggestionList conecta-se à API do GitHub para recuperar e listar as issues abertas, permitindo que o usuário visualize o backlog atual do projeto diretamente pelo Telegram.
@@ -190,11 +193,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 4. SuggestionGuide
 - #### Atributos
-    - ⚙️ Comando: `/suggestion_guide`.
-    - 📋 Presente no menu de comandos: Não.
-    - 📝 Documentado no /help: Sim.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/suggestion_guide`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler SuggestionGuide fornece instruções para o usuário, explicando as melhores práticas para escrever uma issue clara e útil.
@@ -218,11 +221,11 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ### 5. BuggedCommand
 - #### Atributos
-    - ⚙️ Comando: `/bugged_command`.
-    - 📋 Presente no menu de comandos: Não.
-    - 📝 Documentado no /help: Não.
-    - 🔎 Escopo: All.
-    - 🗝️ Permissão: Qualquer Usuário.
+    - ⚙️ **Comando:** `/bugged_command`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Não.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
 
 - #### Função
     - O handler BuggedCommand é intencionalmente defeituoso. Serve para ilustrar os exemplos de issue de bug do SuggestionGuide.
