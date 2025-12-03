@@ -19,7 +19,8 @@ class Help(msg_handler):
         help_message += f"  ● /start - Comece a interagir comigo!\n"
         help_message += f"  ● /suggestion_add - Envie uma sugestão de melhoria para mim!\n"
         help_message += f"  ● /suggestion_guide - Confira o guia instrucional de como elaborar uma sugestão de melhoria para mim!\n"
-        help_message += f"  ● /suggestion_list - Veja quais são as sugestões pendentes de melhoria para mim!"
+        help_message += f"  ● /suggestion_list - Veja quais são as sugestões pendentes de melhoria para mim!\n"
+        help_message += f"  ● /gitInvite - Caso for administrador, adicione um membro à organização CodeLab no GitHub! (Adicione o email após o comando. Ex: /gitInvite/exemplo@email.com)"
 
         await self.BOT.send_message(
             chat_id=msg.chat.id,
