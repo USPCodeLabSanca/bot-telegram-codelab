@@ -4,7 +4,7 @@
 # Veja mais em: https://git-scm.com/docs/gitignore
 .vscode
 src/.env
-src/venv
+src/.venv
 __pycache__
 *.db
 
