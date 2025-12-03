@@ -24,8 +24,20 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
 
 ## Sumário
 * [Introdução e Legenda](#Introdução)
+* [Módulo: codelab.py](#módulo-codelabpy)
+    * [CodelabHandler](#1-codelabhandler)
+* [Módulo: feedbacks.py](#módulo-feedbackspy)
+    * [FeedbackMain](#1-feedbacknmain)
+    * [FeedbackAdd](#2-feedbackadd)
+    * [FeedbackHelper](#3-feedbackguide)
+* [Módulo: fronts.py](#módulo-frontspy)
+    * [ShowFronts](#1-showfronts)
+* [Módulo: git_invite.py](#módulo-gitinvitepy)
+    * [GitInvite](#1-gitinvite)
 * [Módulo: help.py](#módulo-helppy)
     * [Help](#1-help)
+* [Módulo: links.py](#módulo-linkspy)
+    * [ShowLinks](#1-showlinks)
 * [Módulo: start.py](#módulo-startpy)
     * [Start](#1-start)
 * [Módulo: suggestions.py](#módulo-suggestionspy)
@@ -34,6 +46,181 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
     * [SuggestionList](#3-suggestionlist)
     * [SuggestionGuide](#4-suggestionguide)
     * [BuggedCommand](#5-buggedcommand)
+
+## Módulo: codelab.py
+
+### 1. CodelabHandler
+- #### Atributos
+    - ⚙️ **Comando:** `/codelab`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler CodelabHandler envia variações do nome Codelab, visto que poucas pessoas sabem como realmente é o nome do grupo.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/codelab`. O Bot envia a mensagem "O meu grupo se chama _*nome_errado*!"
+
+- #### Inicialização e dependências
+     ``` 
+        codelab_comm = codelab.CodelabHandler(bot, CODELAB_NAME_LIST)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `CODELAB_NAME_LIST`      | Caminho (str) para o arquivo JSON com variações erradas do nome "codelab"|
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: feedbacks.py
+
+### 1. FeedbackMain
+- #### Atributos
+    - ⚙️ **Comando:** `/feedback`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All (preferencialmente, Privado).
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler FeedbackMain é o início do sistema de feedbacks. Ele direciona o usuário para as ações de enviar um feedback ou então ver os regulamentos do envio.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/feedback`. O Bot envia um menu contendo:
+        - Opção de dar um feedback.
+        - Opção de cancelar.
+        - Regras de uso.
+
+
+- #### Inicialização e dependências
+     ``` 
+        feedback_main = feedbacks.FeedbackMain(bot, feedback_add, feedbacks_guide)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `feedback_add`           | Instancia do handler [FeedbackAdd](#2-feedbackadd)|
+    | `feedback_guide`         | Instancia do handler [FeedbackHelper](#3-feedbackhelper)|
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+### 2. FeedbackAdd
+- #### Atributos
+    - ⚙️ **Comando:** `/feedback_add`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Não.
+    - 🔎 **Escopo:** All (preferencialmente, Privado).
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler FeedbackAdd coleta a categoria do feedback a ser enviado, recebe o texto do usuário, formata e então o envia para um grupo do telegram contendo os coordenadores do Codelab.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário aciona o handler por meio do [FeedbackMain](#1-feedbackmain) ou então envia o comando `/feedback_add`. O Bot apresenta os botões de categoria `SUGESTÃO`, `RECLAMAÇÃO`, `ELOGIO`.
+
+    2. **Seleção**: Usuário clica na categoria desejada.
+
+    3. **Submissão de feedback**: Usuário envia o texto do feedback.
+
+    4. **Confirmação:** O Bot exibe uma prévia formatada. Se o usuário confirmar, o Bot envia para o grupo dos coordenadores e notifica o usuário do sucesso.
+
+- #### Inicialização e dependências
+    ```
+        feedbacks_add = feedbacks.FeedbackAdd(bot, TARGET_CHAT_ID)
+    ``` 
+    
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+    | `TARGET_CHAT_ID`         | ID (int) do chat dos coordenadores |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+### 4. FeedbackHelper
+- #### Atributos
+    - ⚙️ **Comando:** `/feedback_guide`.
+    - 📋 **Menu de Comandos:** Não.
+    - 📝 **/help:** Não.
+    - 🔎 **Escopo:** All (preferencialmente, Privado).
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler FeedbackHelper fornece instruções e regras para o usuário, explicando as melhores práticas para construir um feedback claro, respeitoso e produtivo.
+
+- #### Fluxo de comunicação
+    1.  **Solicitação:** O usuário aciona o handler por meio do [FeedbackMain](#1-feedbackmain) ou então envia o comando `/feedback_guide`. O Bot envia um texto com os regulamentos e as dicas.
+
+- #### Inicialização e dependências
+    ```
+        feedbacks_guide = feedbacks.FeedbackHelper(bot)
+    ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: fronts.py
+
+### 1. ShowFronts
+- #### Atributos
+    - ⚙️ **Comando:** `/fronts`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler ShowFronts envia um menu contendo resumos da atuação de cada frente do Codelab.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/fronts`. O Bot apresenta um menu contendo os botões das frentes `DEV.LEARN`, `DEV.BOOST`, `DEV.HIRE`, `DEV.CLARA`, `DEV.HIRE`.
+
+    2. **Seleção**: Quando o usuário escolhe uma das frentes, o Bot envia um resumo curto daquela opção
+
+- #### Inicialização e dependências
+     ``` 
+        front = fronts.ShowFronts(bot)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: git_invite.py
+
+### 1. GitInvite
+- #### Atributos
+    - ⚙️ **Comando:** `/git_Invite/*`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler GitInvite recebe o email do usuário e, usando a API do GitHub, envia um convite para que ele entre para a organização do Codelab dentro do GitHub.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/git_Invite/*` com o seu email, que deve estar atrelado a uma conta do Git, na frente da segunda barra. O Bot faz um request à API do GitHub, e então um convite para adentrar a organização chega no email fornecido.
+
+- #### Inicialização e dependências
+     ``` 
+        git_Invite = git_invite.gitInvite(bot, GIT_TOKEN, GIT_API_INVITE_ENDPOINT, session)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
 
 ## Módulo: help.py
 
@@ -60,6 +247,33 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
     | :------------------------|:-----------------------|
     | `bot`                    | Instância do AsyncTeleBot |
     
+[⬆️ Voltar ao Topo](#Manual-de-Handlers)
+
+## Módulo: links.py
+
+### 1. ShowLinks
+- #### Atributos
+    - ⚙️ **Comando:** `/links`.
+    - 📋 **Menu de Comandos:** Sim.
+    - 📝 **/help:** Sim.
+    - 🔎 **Escopo:** All.
+    - 🗝️ **Permissão:** Qualquer Usuário.
+
+- #### Função
+    - O handler ShowLinks envia uma mensagem contendo os links importantes do Codelab, como o do Insta, do Notion, entre outros.
+
+- #### Fluxo de comunicação
+    1. **Solicitação:** O usuário envia `/links`. O Bot envia uma mensagem contendo os hyperlinks importantes do grupo.
+
+- #### Inicialização e dependências
+     ``` 
+        link = links.show_links(bot)
+     ```
+
+    | Parâmetro                | Descrição               |
+    | :------------------------|:-----------------------|
+    | `bot`                    | Instância do AsyncTeleBot |
+
 [⬆️ Voltar ao Topo](#Manual-de-Handlers)
 
 ## Módulo: start.py
