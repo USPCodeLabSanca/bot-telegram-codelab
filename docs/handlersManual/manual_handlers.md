@@ -22,7 +22,7 @@ Para garantir uma leitura rápida das capacidades de cada comando, os seguintes 
     - *Qualquer Usuário:* Aberto ao público geral.
     - *Admin:* Restrito a administradores do grupo.
 
-## Princípios gerais de um handler
+## Princípios Gerais de um Handler
 - ### abstract.py e msg_handler
     Todos os message_handler's descritos neste documento são filhas da classe abstrata `msg_handler`, que está disposta no módulo `abstract.py`. Atualmente, as únicas 2 funcionalidades desta classe são:
 
