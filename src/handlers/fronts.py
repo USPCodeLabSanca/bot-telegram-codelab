@@ -7,7 +7,6 @@ class ShowFronts(msg_handler):
     def __init__(self, bot):
         super().__init__(bot)
         self.callback()
-        pass
 
     async def __call__(self, msg: telebot.types.Message):
         fronts = 'No CodeLabSanca🧪, temos cinco frentes principais:\n📚 Dev. Learn\n💻 Dev. Boost\n🎉 Dev. Hack.\n🥚 Dev. Clara\n🙅‍♂️ Dev. Hire \n\n\n\n👉 Sobre qual você quer saber?'
