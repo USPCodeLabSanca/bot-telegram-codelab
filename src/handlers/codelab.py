@@ -12,12 +12,14 @@ from utils.isAdmin import admin_only
 
 class CodelabHandler(msg_handler):
     def __init__(self, bot, codelab_name_json):
+        super().__init__(bot)
+
         # Lendo os dados no json
         with open(codelab_name_json, "r", encoding="utf-8") as file:
             dados = json.load(file)
 
         # Criando a classe com a lista de nomes como dependência
-        super().__init__(bot, name_list=dados["codelab_name_list"])
+        self.name_list= dados["codelab_name_list"]
 
     # Escolhe aleatóriamente um nome errado do grupo para enviar na resposta
     async def __call__(self, msg: Message):
